@@ -5,13 +5,14 @@
 `include "qspi_field_widths.vh" 
 
 // Define the widths of the QSPI request fields
-localparam QSPI_CMD_LEN   = `QSPI_CMD_LEN  ;
-localparam QSPI_ADDR_LEN  = `QSPI_ADDR_LEN ;
-localparam QSPI_WDATA_LEN = `QSPI_WDATA_LEN;
-localparam QSPI_START_LEN = `QSPI_START_LEN;
+localparam QSPI_CMD_LEN     = `QSPI_CMD_LEN    ;
+localparam QSPI_BANKMAP_LEN = `QSPI_BANKMAP_LEN;
+localparam QSPI_ADDR_LEN    = `QSPI_ADDR_LEN   ;
+localparam QSPI_WDATA_LEN   = `QSPI_WDATA_LEN  ;
+localparam QSPI_START_LEN   = `QSPI_START_LEN  ;
 
-localparam QSPI_RDATA_LEN = `QSPI_RDATA_LEN;
-localparam QSPI_IDLE_LEN  = `QSPI_IDLE_LEN ;
+localparam QSPI_RDATA_LEN   = `QSPI_RDATA_LEN  ;
+localparam QSPI_IDLE_LEN    = `QSPI_IDLE_LEN   ;
 
 /*
 ****************************************************************************
@@ -26,6 +27,7 @@ localparam QSPI_IDLE_LEN  = `QSPI_IDLE_LEN ;
  */
 // Compute the total width the QSPI request fields
 localparam COMPUTED_REQ_WIDTH = QSPI_CMD_LEN
+                              + QSPI_BANKMAP_LEN
                               + QSPI_ADDR_LEN
                               + QSPI_WDATA_LEN 
                               + QSPI_START_LEN;
@@ -48,29 +50,31 @@ wire[QSPI_RSP_ERROR:0] qspi_rsp_dummy;
 ****************************************************************************
  */
 
-
 //=============================================================================
 // Here we declare the broken out fields for interacting with QSPI
 //=============================================================================
 `ifdef QSPI_FRONT_END
-    wire[  `QSPI_CMD_LEN-1:0] qspi_cmd;  
-    wire[ `QSPI_ADDR_LEN-1:0] qspi_addr; 
-    wire[`QSPI_WDATA_LEN-1:0] qspi_wdata;
-    wire[`QSPI_START_LEN-1:0] qspi_start;
-    reg [`QSPI_RDATA_LEN-1:0] qspi_rdata; 
-    reg [ `QSPI_IDLE_LEN-1:0] qspi_idle;
+    wire[    `QSPI_CMD_LEN-1:0] qspi_cmd;  
+    wire[`QSPI_BANKMAP_LEN-1:0] qspi_bankmap;
+    wire[   `QSPI_ADDR_LEN-1:0] qspi_addr; 
+    wire[  `QSPI_WDATA_LEN-1:0] qspi_wdata;
+    wire[  `QSPI_START_LEN-1:0] qspi_start;
+    reg [  `QSPI_RDATA_LEN-1:0] qspi_rdata; 
+    reg [   `QSPI_IDLE_LEN-1:0] qspi_idle;
 `else
-    reg [  `QSPI_CMD_LEN-1:0] qspi_cmd;  
-    reg [ `QSPI_ADDR_LEN-1:0] qspi_addr; 
-    reg [`QSPI_WDATA_LEN-1:0] qspi_wdata;
-    reg [`QSPI_START_LEN-1:0] qspi_start;
-    wire[`QSPI_RDATA_LEN-1:0] qspi_rdata;
-    wire[ `QSPI_IDLE_LEN-1:0] qspi_idle;
+    reg [    `QSPI_CMD_LEN-1:0] qspi_cmd;  
+    reg [`QSPI_BANKMAP_LEN-1:0] qspi_bankmap;
+    reg [   `QSPI_ADDR_LEN-1:0] qspi_addr; 
+    reg [  `QSPI_WDATA_LEN-1:0] qspi_wdata;
+    reg [  `QSPI_START_LEN-1:0] qspi_start;
+    wire[  `QSPI_RDATA_LEN-1:0] qspi_rdata;
+    wire[   `QSPI_IDLE_LEN-1:0] qspi_idle;
 `endif
 //=============================================================================
 
-`define QSPI_REQ_FIELDS {qspi_cmd, qspi_addr, qspi_wdata, qspi_start}
-`define QSPI_RSP_FIELDS {qspi_rdata, qspi_idle}
+
+`define QSPI_REQ_FIELDS {qspi_cmd, qspi_bankmap, qspi_addr, qspi_wdata, qspi_start}
+`define QSPI_RSP_FIELDS {qspi_idle, qspi_rdata}
 
 // Commands that can be placed in the "qspi_cmd" field
 localparam QSPI_CMD_WHR  = 0;  // Write host register

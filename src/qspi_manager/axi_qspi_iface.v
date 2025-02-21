@@ -66,12 +66,13 @@ assign `QSPI_RSP_FIELDS = qspi_rsp_in;
 
 //=========================  AXI Register Map  =============================
 localparam REG_QSPI_CMD     = 0;
-localparam REG_QSPI_ADDR    = 1;
-localparam REG_QSPI_WDATA_H = 2;
-localparam REG_QSPI_WDATA_L = 3;
-localparam REG_QSPI_START   = 4;
-localparam REG_QSPI_RDATA_H = 5;
-localparam REG_QSPI_RDATA_L = 6;
+localparam REG_QSPI_BANKMAP = 1;
+localparam REG_QSPI_ADDR    = 2;
+localparam REG_QSPI_WDATA_H = 3;
+localparam REG_QSPI_WDATA_L = 4;
+localparam REG_QSPI_START   = 5;
+localparam REG_QSPI_RDATA_H = 6;
+localparam REG_QSPI_RDATA_L = 7;
 //==========================================================================
 
 
@@ -139,18 +140,26 @@ always @(posedge clk) begin
                 case (ashi_windx)
                
                     REG_QSPI_CMD:     qspi_cmd          <= ashi_wdata;
+                    REG_QSPI_BANKMAP: qspi_bankmap      <= ashi_wdata;
                     REG_QSPI_ADDR:    qspi_addr         <= ashi_wdata;
                     REG_QSPI_WDATA_H: qspi_wdata[63:32] <= ashi_wdata;
                     REG_QSPI_WDATA_L: qspi_wdata[31:00] <= ashi_wdata;
-                    REG_QSPI_START:   qspi_start        <= ashi_wdata;
+                    REG_QSPI_START:
+                        if (ashi_wdata[0]) begin
+                            qspi_start       <= 1;
+                            ashi_write_state <= ashi_write_state + 1; 
+                        end
 
                     // Writes to any other register are a decode-error
                     default: ashi_wresp <= DECERR;
                 endcase
             end
 
-        // Dummy state, doesn't do anything
-        1: ashi_write_state <= 0;
+        // Wait for the transaction to complete
+        1:  if (qspi_idle) begin
+                qspi_read_result <= qspi_rdata;
+                ashi_write_state <= 0;
+            end
 
     endcase
 end
@@ -181,6 +190,7 @@ always @(posedge clk) begin
             
             // Allow a read from any valid register                
             REG_QSPI_CMD:     ashi_rdata <= qspi_cmd;
+            REG_QSPI_BANKMAP: ashi_rdata <= qspi_bankmap;
             REG_QSPI_ADDR:    ashi_rdata <= qspi_addr;
             REG_QSPI_WDATA_H: ashi_rdata <= qspi_wdata[63:32];
             REG_QSPI_WDATA_L: ashi_rdata <= qspi_wdata[31:00];

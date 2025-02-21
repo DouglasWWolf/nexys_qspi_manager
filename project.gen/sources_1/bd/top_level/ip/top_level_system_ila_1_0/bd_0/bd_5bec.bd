@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xED9A1AF51616C0E4",
+      "boundary_crc": "0x7B9EAB842D1F7AEE",
       "design_src": "SBD",
       "device": "xc7a100tcsg324-1",
       "name": "bd_5bec",
@@ -48,27 +48,37 @@
       },
       "probe1": {
         "direction": "I",
-        "left": "31",
+        "left": "9",
         "right": "0"
       },
       "probe2": {
         "direction": "I",
-        "left": "63",
+        "left": "31",
         "right": "0"
       },
       "probe3": {
         "direction": "I",
-        "left": "0",
+        "left": "63",
         "right": "0"
       },
       "probe4": {
         "direction": "I",
-        "left": "63",
+        "left": "0",
         "right": "0"
       },
       "probe5": {
         "direction": "I",
+        "left": "63",
+        "right": "0"
+      },
+      "probe6": {
+        "direction": "I",
         "left": "0",
+        "right": "0"
+      },
+      "probe7": {
+        "direction": "I",
+        "left": "64",
         "right": "0"
       }
     },
@@ -107,7 +117,7 @@
             "value": "Native"
           },
           "C_NUM_OF_PROBES": {
-            "value": "6"
+            "value": "8"
           },
           "C_PROBE0_MU_CNT": {
             "value": "1"
@@ -125,7 +135,7 @@
             "value": "0"
           },
           "C_PROBE1_WIDTH": {
-            "value": "32"
+            "value": "10"
           },
           "C_PROBE2_MU_CNT": {
             "value": "1"
@@ -134,7 +144,7 @@
             "value": "0"
           },
           "C_PROBE2_WIDTH": {
-            "value": "64"
+            "value": "32"
           },
           "C_PROBE3_MU_CNT": {
             "value": "1"
@@ -143,7 +153,7 @@
             "value": "0"
           },
           "C_PROBE3_WIDTH": {
-            "value": "1"
+            "value": "64"
           },
           "C_PROBE4_MU_CNT": {
             "value": "1"
@@ -152,7 +162,7 @@
             "value": "0"
           },
           "C_PROBE4_WIDTH": {
-            "value": "64"
+            "value": "1"
           },
           "C_PROBE5_MU_CNT": {
             "value": "1"
@@ -161,7 +171,25 @@
             "value": "0"
           },
           "C_PROBE5_WIDTH": {
+            "value": "64"
+          },
+          "C_PROBE6_MU_CNT": {
             "value": "1"
+          },
+          "C_PROBE6_TYPE": {
+            "value": "0"
+          },
+          "C_PROBE6_WIDTH": {
+            "value": "1"
+          },
+          "C_PROBE7_MU_CNT": {
+            "value": "1"
+          },
+          "C_PROBE7_TYPE": {
+            "value": "0"
+          },
+          "C_PROBE7_WIDTH": {
+            "value": "65"
           },
           "C_TIME_TAG_WIDTH": {
             "value": "32"
@@ -219,6 +247,18 @@
         "ports": [
           "probe5",
           "ila_lib/probe5"
+        ]
+      },
+      "probe6_1": {
+        "ports": [
+          "probe6",
+          "ila_lib/probe6"
+        ]
+      },
+      "probe7_1": {
+        "ports": [
+          "probe7",
+          "ila_lib/probe7"
         ]
       }
     }
