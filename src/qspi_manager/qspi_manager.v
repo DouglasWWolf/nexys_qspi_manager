@@ -201,9 +201,11 @@ always @(posedge clk) begin
         // Drive out the next outgoing bit on sdo, and drive SCK low
         QSM_FALLING_SCK:
             if (qsm_delay == 0) begin
+                
                 sck          <= 0;
                 mosi         <= qsm_dataword[TX_BUFF_SIZE-1 -: 4];
                 qsm_dataword <= qsm_dataword << 4;
+                
                 if (qsm_cycle_counter < tx_cycle_count) begin
                     qsm_delay <= QSPI_SCK_DELAY;
                     qsm_state <= QSM_RISING_SCK;
