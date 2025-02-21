@@ -159,9 +159,10 @@ localparam QSM_WAIT_COMPLETE = 3;
 //
 // "mosi" can only change values when "sck" is low.
 //
-// Prior to strobing start_qspi_transaction high:
-//    qspi_dataword = The bits to be transmitted
-//    qspi_bitcount = The number of bits in the transaction
+// Prior to strobing tx_start high:
+//    Ensure that tx_idle = 1
+//    tx_dataword    = The bits to be transmitted
+//    tx_cycle_count = The number of bits in the transaction
 //=============================================================================
 reg                    tx_start;
 reg [TX_BUFF_SIZE-1:0] tx_dataword; 
