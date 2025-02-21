@@ -14,22 +14,22 @@ preplace inst source_100mhz -pg 1 -lvl 1 -x 140 -y 240 -defaultsOSRD -pinDir clk
 preplace inst uart_axi_bridge -pg 1 -lvl 2 -x 400 -y 180 -defaultsOSRD -pinDir UART left -pinY UART 0L -pinDir M_AXI right -pinY M_AXI 40R -pinDir s_axi_aclk left -pinY s_axi_aclk 20L -pinDir s_axi_aresetn left -pinY s_axi_aresetn 40L
 preplace inst system_interconnect -pg 1 -lvl 3 -x 680 -y 220 -swap {0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 40 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 20 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61} -defaultsOSRD -pinDir S00_AXI left -pinY S00_AXI 0L -pinDir M00_AXI right -pinY M00_AXI 140R -pinDir M01_AXI right -pinY M01_AXI 0R -pinDir aclk left -pinY aclk 20L -pinDir aresetn left -pinY aresetn 40L
 preplace inst axi_revision -pg 1 -lvl 4 -x 990 -y 360 -defaultsOSRD -pinDir S_AXI left -pinY S_AXI 0L -pinDir AXI_ACLK left -pinY AXI_ACLK 20L -pinDir AXI_ARESETN left -pinY AXI_ARESETN 40L
-preplace inst axi_qspi_iface -pg 1 -lvl 4 -x 990 -y 220 -defaultsOSRD -pinDir S_AXI left -pinY S_AXI 0L -pinDir clk left -pinY clk 20L -pinDir resetn left -pinY resetn 40L -pinBusDir qspi_req_out right -pinBusY qspi_req_out 0R -pinBusDir qspi_rsp_in right -pinBusY qspi_rsp_in 20R
 preplace inst system_ila_0 -pg 1 -lvl 4 -x 990 -y 60 -defaultsOSRD -pinDir clk left -pinY clk 20L -pinBusDir probe0 right -pinBusY probe0 0R -pinBusDir probe1 right -pinBusY probe1 20R
 preplace inst system_ila_1 -pg 1 -lvl 6 -x 1650 -y 80 -swap {6 0 1 3 2 4 5} -defaultsOSRD -pinDir clk left -pinY clk 160L -pinBusDir probe0 left -pinBusY probe0 0L -pinBusDir probe1 left -pinBusY probe1 20L -pinBusDir probe2 left -pinBusY probe2 60L -pinBusDir probe3 left -pinBusY probe3 40L -pinBusDir probe4 left -pinBusY probe4 80L -pinBusDir probe5 left -pinBusY probe5 100L
-preplace inst qspi_manager -pg 1 -lvl 5 -x 1370 -y 80 -swap {1 8 2 3 5 4 6 7 0 9} -defaultsOSRD -pinDir clk left -pinY clk 60L -pinDir resetn left -pinY resetn 80L -pinBusDir dbg_qspi_cmd right -pinBusY dbg_qspi_cmd 0R -pinBusDir dbg_qspi_addr right -pinBusY dbg_qspi_addr 20R -pinBusDir dbg_qspi_wdata right -pinBusY dbg_qspi_wdata 60R -pinBusDir dbg_qspi_start right -pinBusY dbg_qspi_start 40R -pinBusDir dbg_qspi_rdata right -pinBusY dbg_qspi_rdata 80R -pinBusDir dbg_qspi_idle right -pinBusY dbg_qspi_idle 100R -pinBusDir qspi_req_in left -pinBusY qspi_req_in 0L -pinBusDir qspi_rsp_out left -pinBusY qspi_rsp_out 100L
+preplace inst axi_qspi_iface -pg 1 -lvl 4 -x 990 -y 220 -defaultsOSRD -pinDir S_AXI left -pinY S_AXI 0L -pinDir clk left -pinY clk 20L -pinDir resetn left -pinY resetn 40L -pinBusDir qspi_req_out right -pinBusY qspi_req_out 0R -pinBusDir qspi_rsp_in right -pinBusY qspi_rsp_in 20R
+preplace inst qspi_manager -pg 1 -lvl 5 -x 1370 -y 80 -swap {8 9 2 3 5 4 6 7 1 11 10 0 12 13 14} -defaultsOSRD -pinDir clk left -pinY clk 60L -pinDir resetn left -pinY resetn 80L -pinBusDir dbg_qspi_cmd right -pinBusY dbg_qspi_cmd 0R -pinBusDir dbg_qspi_addr right -pinBusY dbg_qspi_addr 20R -pinBusDir dbg_qspi_wdata right -pinBusY dbg_qspi_wdata 60R -pinBusDir dbg_qspi_start right -pinBusY dbg_qspi_start 40R -pinBusDir dbg_qspi_rdata right -pinBusY dbg_qspi_rdata 80R -pinBusDir dbg_qspi_idle right -pinBusY dbg_qspi_idle 100R -pinBusDir qspi_req_in left -pinBusY qspi_req_in 20L -pinBusDir qspi_rsp_out left -pinBusY qspi_rsp_out 100L -pinBusDir mosi right -pinBusY mosi 120R -pinBusDir miso left -pinBusY miso 0L -pinDir sck right -pinY sck 140R -pinDir hcsn right -pinY hcsn 160R -pinDir bcsn right -pinY bcsn 180R
 preplace netloc axi_qspi_iface_0_qspi_req_out 1 4 1 1160 60n
 preplace netloc clk_in1_0_1 1 0 1 NJ 240
 preplace netloc ext_reset_in_0_1 1 0 1 NJ 260
-preplace netloc qspi_manager_qspi_rsp_out 1 4 1 1140 80n
-preplace netloc source_100mhz_sys_clk 1 1 5 260 120 520 120 840 140 1180 240 N
-preplace netloc source_100mhz_sys_resetn 1 1 4 280 270 540 160 820 160 N
-preplace netloc qspi_manager_dbg_qspi_cmd 1 5 1 N 80
 preplace netloc qspi_manager_dbg_qspi_addr 1 5 1 N 100
-preplace netloc qspi_manager_dbg_qspi_wdata 1 5 1 N 140
-preplace netloc qspi_manager_dbg_qspi_start 1 5 1 N 120
-preplace netloc qspi_manager_dbg_qspi_rdata 1 5 1 N 160
+preplace netloc qspi_manager_dbg_qspi_cmd 1 5 1 N 80
 preplace netloc qspi_manager_dbg_qspi_idle 1 5 1 N 180
+preplace netloc qspi_manager_dbg_qspi_rdata 1 5 1 N 160
+preplace netloc qspi_manager_dbg_qspi_start 1 5 1 N 120
+preplace netloc qspi_manager_dbg_qspi_wdata 1 5 1 N 140
+preplace netloc qspi_manager_qspi_rsp_out 1 4 1 1140 80n
+preplace netloc source_100mhz_sys_clk 1 1 5 260 120 520 120 840 140 1180 320 1560
+preplace netloc source_100mhz_sys_resetn 1 1 4 280 270 540 160 820 160 N
 preplace netloc axi_uartlite_UART 1 0 2 NJ 180 NJ
 preplace netloc system_interconnect_M00_AXI 1 3 1 N 360
 preplace netloc system_interconnect_M01_AXI 1 3 1 N 220

@@ -73,10 +73,12 @@ wire[QSPI_RSP_ERROR:0] qspi_rsp_dummy;
 `define QSPI_RSP_FIELDS {qspi_rdata, qspi_idle}
 
 // Commands that can be placed in the "qspi_cmd" field
-localparam QSPI_CMD_WHR = 0;  // Write host register
-localparam QSPI_CMD_WBR = 1;  // Write bank register
-localparam QSPI_CMD_RHR = 2;  // Read host register
-localparam QSPI_CMD_RBR = 3;  // Read bank register
+localparam QSPI_CMD_WHR  = 0;  // Write host register
+localparam QSPI_CMD_WBR  = 1;  // Write bank register
+localparam QSPI_CMD_RHR  = 2;  // Read host register
+localparam QSPI_CMD_RBR  = 3;  // Read bank register
+localparam QSPI_CMD_RMEM = 4;  // Read SMEM  (64-bit read)
+localparam QSPI_CMD_WMEM = 5;  // Write SMEM (64-bit write)
 
 // End of code gaurd
 `endif
