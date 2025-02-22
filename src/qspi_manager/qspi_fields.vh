@@ -76,13 +76,23 @@ wire[QSPI_RSP_ERROR:0] qspi_rsp_dummy;
 `define QSPI_REQ_FIELDS {qspi_cmd, qspi_bankmap, qspi_addr, qspi_wdata, qspi_start}
 `define QSPI_RSP_FIELDS {qspi_idle, qspi_rdata}
 
+
+//=============================================================================
 // Commands that can be placed in the "qspi_cmd" field
-localparam QSPI_CMD_WHR  = 0;  // Write host register
-localparam QSPI_CMD_WBR  = 1;  // Write bank register
-localparam QSPI_CMD_RHR  = 2;  // Read host register
-localparam QSPI_CMD_RBR  = 3;  // Read bank register
-localparam QSPI_CMD_RMEM = 4;  // Read SMEM  (64-bit read)
-localparam QSPI_CMD_WMEM = 5;  // Write SMEM (64-bit write)
+//=============================================================================
+localparam QSPI_CMD_RD_HREG = 0;  // Read a 32-bit register from the GenX "host"
+localparam QSPI_CMD_WR_HREG = 1;  // Write to a 32-bit register on the GenX "host"
+
+localparam QSPI_CMD_RD_BREG = 2;  // Read a 32-bit register from one of the banks
+localparam QSPI_CMD_WR_BREG = 3;  // Write to a 32-bit register in one or more banks
+
+localparam QSPI_CMD_RD_SMEM = 4;  // Read a 64-bit value from SMEM
+localparam QSPI_CMD_WR_SMEM = 5;  // Write a 64-bit value to SMEM in in or more banks
+
+localparam QSPI_CMD_RD_BULK = 6;  // Read SMEM 512-bits at a time
+localparam QSPI_CMD_WR_BULK = 7;  // Write to SMEM 512-bits at a time
+//=============================================================================
+
 
 // End of code gaurd
 `endif

@@ -15,3 +15,10 @@ localparam VERSION_YEAR  = 2024;
 
 localparam RTL_TYPE      = 81424;
 localparam RTL_SUBTYPE   = 0;
+
+
+
+/*
+    After final falling SCK edge, do we need a delay before releasing CS?
+
+*/

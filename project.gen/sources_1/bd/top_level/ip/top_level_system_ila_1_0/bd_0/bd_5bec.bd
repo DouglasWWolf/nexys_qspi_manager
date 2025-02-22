@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x7B9EAB842D1F7AEE",
+      "boundary_crc": "0x8EFBAA46D87A7B2C",
       "design_src": "SBD",
       "device": "xc7a100tcsg324-1",
       "name": "bd_5bec",
@@ -43,7 +43,7 @@
       },
       "probe0": {
         "direction": "I",
-        "left": "2",
+        "left": "3",
         "right": "0"
       },
       "probe1": {
@@ -126,7 +126,7 @@
             "value": "0"
           },
           "C_PROBE0_WIDTH": {
-            "value": "3"
+            "value": "4"
           },
           "C_PROBE1_MU_CNT": {
             "value": "1"

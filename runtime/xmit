@@ -12,19 +12,29 @@ REG_BASE=0x1000
 #
 #  Commands for REG_QSPI_CMD
 #
- QSPI_CMD_WHR=0
- QSPI_CMD_WBR=1
- QSPI_CMD_RHR=2
- QSPI_CMD_RBR=3
-QSPI_CMD_RMEM=4
-QSPI_CMD_WMEM=5
+QSPI_CMD_RD_HREG=0
+QSPI_CMD_WR_HREG=1
+QSPI_CMD_RD_BREG=2
+QSPI_CMD_WR_BREG=3
+QSPI_CMD_RD_SMEM=4
+QSPI_CMD_WR_SMEM=5
+QSPI_CMD_RD_BULK=6
+QSPI_CMD_WR_BULK=7
 
-axireg $REG_QSPI_CMD     $QSPI_CMD_RHR
-axireg $REG_QSPI_BANKMAP 0x301
-axireg $REG_QSPI_ADDR    0x4
-axireg $REG_QSPI_WDATA_L 0xABCDEF54
-axireg $REG_QSPI_START   1
+selector=WRITE_BREG
 
-sleep 1
-axireg $REG_QSPI_RDATA_L
+if [ $selector == WRITE_BREG ]; then
+    axireg $REG_QSPI_CMD     $QSPI_CMD_WR_BREG
+    axireg $REG_QSPI_BANKMAP 0x301
+    axireg $REG_QSPI_ADDR    0x0000FEED
+    axireg $REG_QSPI_WDATA_L 0xABCDEF54
+    axireg $REG_QSPI_START   1
+fi
+
+if [ $selector == READ_HREG ]; then
+    axireg $REG_QSPI_CMD     $QSPI_CMD_RD_HREG
+    axireg $REG_QSPI_ADDR    0x4
+    axireg $REG_QSPI_START   1
+    axireg $REG_QSPI_RDATA_L
+fi
 

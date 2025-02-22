@@ -1,5 +1,16 @@
 
-
+//=======================================================================================
+// This module manages QSPI transactions.
+//
+// There are two primary state machines.   The first of these drives low-level QSPI 
+// transactions, everything from the time a chip-select is asserted to the time the
+// chip select is released.
+//
+// The other state machine is a "command handler".   A client module can send a commands
+// such as "Read 64-bit word from SMEM on bank 2" and this state machine will initiate
+// the neccessary sequence of QSPI transactions to carry out the requested command.
+//
+//=======================================================================================
 
 // We want the QSPI interface signals broken out for debug
 `define ADD_DEBUG_PORTS
@@ -39,11 +50,11 @@ module qspi_manager #
     //-------------------------------------------------------
     // These pins connect to the QSPI on the GenX chip
     //-------------------------------------------------------
-    output reg [3:0] mosi,  // Data to GenX chip
-    input      [3:0] miso,  // Data from GenX chip
-    output reg       sck,   // QSPI serial clock
-    output reg       hcsn,  // host chip select (active low)
-    output reg       bcsn   // bank chip select (active low)
+    output reg [3:0] mosi,      // Data to GenX chip
+    input      [3:0] miso,      // Data from GenX chip
+    output reg       sck,       // QSPI serial clock
+    wire             host_csn,  // host chip select (active low)
+    wire             bank_csn   // bank chip select (active low)
     //-------------------------------------------------------
 
 );
@@ -60,12 +71,25 @@ assign  qspi_rsp_out    = `QSPI_RSP_FIELDS;
 reg[63:0] read_result;
 
 //=============================================================================
+// chip_select[] controls the two chip select lines "host_csn" and "bank_csn".
+//=============================================================================
+reg[1:0] chip_select;
+localparam CS_HOST = 2'b10;
+localparam CS_BANK = 2'b01;
+localparam CS_NONE = 2'b11;
+assign host_csn = chip_select[0];
+assign bank_csn = chip_select[1];
+localparam CS_DELAY_NS = 60;
+//=============================================================================
+
+
+//=============================================================================
 // This function stuffs each bit of an input byte into the bottom bit of each
 // nybble of a 32-bit word
 //=============================================================================
-function[31:0] qspi_reorder_8(reg[7:0] value);
+function[31:0] make_opcode(reg[7:0] value);
 begin
-    qspi_reorder_8 = 
+    make_opcode = 
     {
         3'b0, value[7],
         3'b0, value[6],
@@ -82,17 +106,11 @@ endfunction
 
 
 //=============================================================================
-// This function reorders a 32-bit word into the order required by QSPI
+// This function reverses the order of the bytes in a 32-bit input value
 //=============================================================================
-function[31:0] qspi_endian(reg[31:0] value);
+function[31:0] swap_endian(reg[31:0] value);
 begin
-    qspi_endian = 
-    {
-        value[07:04], value[03:00],
-        value[15:12], value[11:08],
-        value[23:20], value[19:16],
-        value[31:28], value[27:24]
-    };
+    swap_endian = {value[07:00], value[15:08], value[23:16], value[31:24]};
 end 
 endfunction 
 //=============================================================================
@@ -101,35 +119,34 @@ endfunction
 //=============================================================================
 // Define the clock-cycles required to carry out each type of QSPI transaction
 //=============================================================================
-localparam QSPI_CMD_CLKS    =  8; // 8 clocks to clock out the QSPI command
+localparam QSPI_OPCODE_CLKS =  8; // 8 clocks to clock out the QSPI command
 localparam QSPI_ADDR_CLKS   =  8; // 8 clocks to clock out the R/W address
 localparam QSPI_DATA_CLKS   =  8; // 8 clocks to clock in/out 32 bits of data
 localparam QSPI_TAT_CLKS    = 16; // Turn-around time
 
 // Number of clocks to write to a register
-localparam QSPI_WREG_CLKS = QSPI_CMD_CLKS
+localparam QSPI_WREG_CLKS = QSPI_OPCODE_CLKS
                           + QSPI_ADDR_CLKS
                           + QSPI_DATA_CLKS;
 
 // Number of clocks to read a register
-localparam QSPI_RREG_CLKS = QSPI_CMD_CLKS
+localparam QSPI_RREG_CLKS = QSPI_OPCODE_CLKS
                           + QSPI_ADDR_CLKS
                           + QSPI_TAT_CLKS
                           + QSPI_DATA_CLKS;
 
-// Number of clocks to write to SMEM
-localparam QSPI_WMEM_CLKS = QSPI_CMD_CLKS
+// Number of clocks to write to 64-bits to SMEM
+localparam QSPI_WMEM_CLKS = QSPI_OPCODE_CLKS
                           + QSPI_ADDR_CLKS
                           + QSPI_DATA_CLKS
                           + QSPI_DATA_CLKS;
 
-// Number of clocks to write read SMEM
-localparam QSPI_RMEM_CLKS = QSPI_CMD_CLKS
+// Number of clocks to write read 64-bits from SMEM
+localparam QSPI_RMEM_CLKS = QSPI_OPCODE_CLKS
                           + QSPI_ADDR_CLKS
                           + QSPI_TAT_CLKS
                           + QSPI_DATA_CLKS
                           + QSPI_DATA_CLKS;
-
 //=============================================================================
 
 // Number of nanoseconds per clk
@@ -145,24 +162,25 @@ localparam EVEN_CLK_PER_SCK = (CLK_PER_SCK & 1) ? CLK_PER_SCK + 1 : CLK_PER_SCK;
 // Ensure that SPI_SCK_DELAY is 0 or positive
 localparam QSPI_SCK_DELAY = (EVEN_CLK_PER_SCK > 2) ? (EVEN_CLK_PER_SCK / 2) - 1 : 0;
 
-// The chip-selects are active low
-localparam CHIP_SELECT = 0;
-
 
 //=============================================================================
 // This block clocks data out via the QSPI bus "sck" and "mosi" pins
 //
-// "mosi" can only change values when "sck" is low.
-//
 // Prior to strobing tx_start high:
 //    Ensure that tx_idle = 1
+//    tx_cs          = Either CS_HOST or CS_BANK
 //    tx_opcode      = QSPI opcode, in the low bit of every nybble
-//    tx_address     = register or SMEM address,  QSPI-endian
-//    tx_wdata0      = 1st word of data to write, QSPI-endian
-//    tx_wdata1      = 2nd word of data to write, QSPI-endian
+//    tx_address     = register or SMEM address,  little-endian
+//    tx_wdata0      = 1st word of data to write, little-endian
+//    tx_wdata1      = 2nd word of data to write, little-endian
 //    tx_cycle_count = The number of bits in the transaction
+//  
+// "mosi" is clocked out on the rising edge of sck.
+// "mosi" changes state on the falling edge of sck
+// 
 //=============================================================================
 reg        tx_start;
+reg [ 1:0] tx_cs;
 reg [31:0] tx_opcode;
 reg [31:0] tx_address;
 reg [31:0] tx_wdata0;
@@ -178,9 +196,11 @@ reg [QSM_DATAWORD_LEN-1:0] qsm_dataword;
 // These are the states for qsm_state
 //-----------------------------------------------------------------------------
 localparam QSM_IDLE          = 0;
-localparam QSM_FALLING_SCK   = 1;
-localparam QSM_RISING_SCK    = 2;
-localparam QSM_WAIT_COMPLETE = 3;
+localparam QSM_ASSERT_CS     = 1;
+localparam QSM_FALLING_SCK   = 2;
+localparam QSM_RISING_SCK    = 3;
+localparam QSM_RELEASE_CS    = 4;
+localparam QSM_WAIT_COMPLETE = 5;
 //-----------------------------------------------------------------------------
 // This is high when this state machine is idle
 //-----------------------------------------------------------------------------
@@ -199,8 +219,9 @@ always @(posedge clk) begin
     if (qsm_delay) qsm_delay <= qsm_delay - 1;
 
     if (resetn == 0) begin
-        qsm_state <= QSM_IDLE;
-        sck       <= 0;
+        qsm_state   <= QSM_IDLE;
+        sck         <= 0;
+        chip_select <= CS_NONE;
     end
 
     else case(qsm_state)
@@ -208,12 +229,17 @@ always @(posedge clk) begin
         // Here we wait for a new command to arrive
         QSM_IDLE:
             if (tx_start) begin
+                chip_select       <= tx_cs;
                 sck               <= 0;
-                qsm_delay         <= 0;
+                qsm_delay         <= CS_DELAY_NS / NS_PER_CLK;
                 qsm_cycle_counter <= 0;
                 qsm_dataword      <= {tx_opcode, tx_address, tx_wdata0, tx_wdata1};
-                qsm_state         <= QSM_FALLING_SCK;
+                qsm_state         <= QSM_ASSERT_CS;
             end
+
+        // Need a delay after asserting chip-select
+        QSM_ASSERT_CS:
+            if (qsm_delay == 0) qsm_state <= QSM_FALLING_SCK;
 
         // Drive out the next outgoing nybble on mosi, and drive SCK low
         QSM_FALLING_SCK:
@@ -227,19 +253,26 @@ always @(posedge clk) begin
                     qsm_delay <= QSPI_SCK_DELAY;
                     qsm_state <= QSM_RISING_SCK;
                 end else begin
-                    qsm_delay <= 20/NS_PER_CLK;
-                    qsm_state <= QSM_WAIT_COMPLETE;
+                    qsm_state <= QSM_RELEASE_CS;
                 end
 
             end
 
-        // Drive SCK high
+        // Drive SCK high.  Data is clocked in by the peer QSPI on highgoing edges of clk
         QSM_RISING_SCK:
             if (qsm_delay == 0) begin
                 sck               <= 1;
                 qsm_delay         <= QSPI_SCK_DELAY;
                 qsm_cycle_counter <= qsm_cycle_counter + 1;
                 qsm_state         <= QSM_FALLING_SCK;
+            end
+
+        // Here we release the chip-select
+        QSM_RELEASE_CS:
+            begin
+                chip_select <= CS_NONE;
+                qsm_delay   <= CS_DELAY_NS/NS_PER_CLK;
+                qsm_state   <= QSM_WAIT_COMPLETE;
             end
 
         // Wait for the final timer to expire before returning to idle
@@ -276,10 +309,14 @@ always @(posedge clk) begin
 
 
     else if (tx_start) begin
-        if      (qspi_cmd == QSPI_CMD_RHR && qspi_addr == 0)
-            flip_flop <= 4'b0101;
-        else if (qspi_cmd == QSPI_CMD_RHR && qspi_addr == 4)
-            flip_flop <= 4'b1100;
+        if      (qspi_cmd == QSPI_CMD_RD_HREG && qspi_addr == 0)
+            flip_flop <= 4'b0001;
+        else if (qspi_cmd == QSPI_CMD_RD_HREG && qspi_addr == 4)
+            flip_flop <= 4'b0010;
+        else if (qspi_cmd == QSPI_CMD_RD_BREG && qspi_addr == 0)
+            flip_flop <= 4'b0100;
+        else if (qspi_cmd == QSPI_CMD_RD_BREG && qspi_addr == 4)
+            flip_flop <= 4'b1000;
         else 
             flip_flop <= 0;
     end
@@ -301,18 +338,21 @@ end
 //=============================================================================
 // This state machine handles incoming transaction requests
 //=============================================================================
-reg [6:0] fsm_state;
+reg [6:0] fsm_state, fsm_next_state;
 //-----------------------------------------------------------------------------
 // These are the states for fsm_state
 //-----------------------------------------------------------------------------
-localparam FSM_IDLE      =  0;
-localparam FSM_CMD_WHR   = 10;
-localparam FSM_CMD_WBR   = 20;
-localparam FSM_CMD_RHR   = 30;
-localparam FSM_CMD_RBR   = 40;
-localparam FSM_CMD_RMEM  = 50;
-localparam FSM_CMD_WMEM  = 60;
-localparam FSM_CMD_END   = 70;
+localparam FSM_IDLE        =  0;
+localparam FSM_BANK_SELECT =  1;
+localparam FSM_WR_HREG     =  5;
+localparam FSM_RD_HREG     = 10;
+localparam FSM_WR_BREG     = 15;
+localparam FSM_RD_BREG     = 20;
+localparam FSM_WR_SMEM     = 25;
+localparam FSM_RD_SMEM     = 30;
+localparam FSM_WR_BULK     = 35;
+localparam FSM_RD_BULK     = 40;
+localparam FSM_CMD_END     = 45;
 //-----------------------------------------------------------------------------
 always @(posedge clk) begin
 
@@ -321,8 +361,6 @@ always @(posedge clk) begin
 
     if (resetn == 0) begin
         fsm_state <= 0;
-        hcsn      <= ~CHIP_SELECT;
-        bcsn      <= ~CHIP_SELECT;
     end
 
     else case(fsm_state)
@@ -331,33 +369,68 @@ always @(posedge clk) begin
         FSM_IDLE:
             if (qspi_start) begin
                 case(qspi_cmd)
-                    QSPI_CMD_WHR:   fsm_state <= FSM_CMD_WHR;
-                    QSPI_CMD_WBR:   fsm_state <= FSM_CMD_WBR;
-                    QSPI_CMD_RHR:   fsm_state <= FSM_CMD_RHR;
-                    QSPI_CMD_RBR:   fsm_state <= FSM_CMD_RBR;
-                    QSPI_CMD_RMEM:  fsm_state <= FSM_CMD_RMEM;
-                    QSPI_CMD_WMEM:  fsm_state <= FSM_CMD_WMEM;
+                    
+                    // Write to host register
+                    QSPI_CMD_WR_HREG: 
+                        fsm_state <= FSM_WR_HREG;
+                    
+                    // Read host register
+                    QSPI_CMD_RD_HREG:
+                        fsm_state <= FSM_RD_HREG;
+                    
+                    // Write to bank register
+                    QSPI_CMD_WR_BREG:
+                        begin
+                            fsm_state      <= FSM_BANK_SELECT;
+                            fsm_next_state <= FSM_WR_BREG;
+                        end
+
+                    // Read bank register
+                    QSPI_CMD_RD_BREG:
+                        begin
+                            fsm_state      <= FSM_BANK_SELECT;
+                            fsm_next_state <= FSM_RD_BREG;
+                        end
+
+                    QSPI_CMD_WR_SMEM: fsm_state <= FSM_WR_SMEM;
+                    QSPI_CMD_RD_SMEM: fsm_state <= FSM_RD_SMEM;
+                    QSPI_CMD_WR_BULK: fsm_state <= FSM_WR_BULK;
+                    QSPI_CMD_RD_BULK: fsm_state <= FSM_RD_BULK;
                 endcase
             end
 
-        // Write to host register
-        FSM_CMD_WHR:
+        // Write a value to the QSPI_BANK_EN_REG "bank select" register
+        FSM_BANK_SELECT:
             begin
-                hcsn           <= CHIP_SELECT;
-                tx_opcode      <= qspi_reorder_8(OPCODE_WRITE_SINGLE);
-                tx_address     <= qspi_endian(qspi_addr);
-                tx_wdata0      <= qspi_endian(qspi_wdata[31:0]);
+                tx_cs          <= CS_HOST;
+                tx_opcode      <= make_opcode(OPCODE_WRITE_SINGLE);
+                tx_address     <= swap_endian(QSPI_BANK_EN_REG);
+                tx_wdata0      <= swap_endian(qspi_bankmap);
+                tx_wdata1      <= 0;
+                tx_cycle_count <= QSPI_WREG_CLKS;
+                tx_start       <= 1;
+                fsm_state      <= fsm_next_state;
+            end
+
+        // Write to a 32-bit host register
+        FSM_WR_HREG:
+            begin
+                tx_cs          <= CS_HOST;
+                tx_opcode      <= make_opcode(OPCODE_WRITE_SINGLE);
+                tx_address     <= swap_endian(qspi_addr);
+                tx_wdata0      <= swap_endian(qspi_wdata[31:0]);
                 tx_wdata1      <= 0;
                 tx_cycle_count <= QSPI_WREG_CLKS;
                 tx_start       <= 1;
                 fsm_state      <= FSM_CMD_END;
             end
 
-        FSM_CMD_RHR:
+        // Read from a 32-bit host register
+        FSM_RD_HREG:
             begin
-                hcsn           <= CHIP_SELECT;
-                tx_opcode      <= qspi_reorder_8(OPCODE_READ_SINGLE);
-                tx_address     <= qspi_endian(qspi_addr);
+                tx_cs          <= CS_HOST;
+                tx_opcode      <= make_opcode(OPCODE_READ_SINGLE);
+                tx_address     <= swap_endian(qspi_addr);
                 tx_wdata0      <= 0;
                 tx_wdata1      <= 0;
                 tx_cycle_count <= QSPI_RREG_CLKS;
@@ -366,11 +439,36 @@ always @(posedge clk) begin
             end
 
 
+        // Write to a 32-bit bank register in one or more banks
+        FSM_WR_BREG:
+            if (tx_idle) begin
+                tx_cs          <= CS_BANK;
+                tx_opcode      <= make_opcode(OPCODE_WRITE_SINGLE);
+                tx_address     <= swap_endian(qspi_addr);
+                tx_wdata0      <= swap_endian(qspi_wdata[31:0]);
+                tx_wdata1      <= 0;
+                tx_cycle_count <= QSPI_WREG_CLKS;
+                tx_start       <= 1;
+                fsm_state      <= FSM_CMD_END;
+            end
+
+        // Read from a 32-bit bank register
+        FSM_RD_BREG:
+            if (tx_idle) begin
+                tx_cs          <= CS_BANK;
+                tx_opcode      <= make_opcode(OPCODE_READ_SINGLE);
+                tx_address     <= swap_endian(qspi_addr);
+                tx_wdata0      <= 0;
+                tx_wdata1      <= 0;
+                tx_cycle_count <= QSPI_RREG_CLKS;
+                tx_start       <= 1;
+                fsm_state      <= FSM_CMD_END;
+            end
+
+        // Wait for the most recent QSPI transaction to finish
         FSM_CMD_END:
             if (tx_idle) begin
-                hcsn       <= ~CHIP_SELECT;
-                bcsn       <= ~CHIP_SELECT;
-                qspi_rdata <= read_result;
+                qspi_rdata <= read_result[63:0];
                 fsm_state  <= FSM_IDLE;
             end
 
@@ -384,7 +482,7 @@ end
 // is idle and waiting for a command
 //=============================================================================
 always @* begin
-    qspi_idle = (FSM_STATE == FSM_IDLE) & (qspi_start == 0);
+    qspi_idle = (fsm_state == FSM_IDLE) & (qspi_start == 0);
 end
 //=============================================================================
 
