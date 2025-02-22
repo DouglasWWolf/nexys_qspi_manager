@@ -21,11 +21,12 @@ QSPI_CMD_WR_SMEM=5
 QSPI_CMD_RD_BULK=6
 QSPI_CMD_WR_BULK=7
 
-selector=WRITE_BREG
+selector=$1
+test -z $selector && selector=READ_BREG
 
-if [ $selector == WRITE_BREG ]; then
-    axireg $REG_QSPI_CMD     $QSPI_CMD_WR_BREG
-    axireg $REG_QSPI_BANKMAP 0x301
+if [ $selector == WRITE_HREG ]; then
+    axireg $REG_QSPI_CMD     $QSPI_CMD_WR_HREG
+    axireg $REG_QSPI_BANKMAP 0
     axireg $REG_QSPI_ADDR    0x0000FEED
     axireg $REG_QSPI_WDATA_L 0xABCDEF54
     axireg $REG_QSPI_START   1
@@ -35,6 +36,40 @@ if [ $selector == READ_HREG ]; then
     axireg $REG_QSPI_CMD     $QSPI_CMD_RD_HREG
     axireg $REG_QSPI_ADDR    0x4
     axireg $REG_QSPI_START   1
+    axireg $REG_QSPI_RDATA_L
+fi
+
+if [ $selector == WRITE_BREG ]; then
+    axireg $REG_QSPI_CMD     $QSPI_CMD_WR_BREG
+    axireg $REG_QSPI_BANKMAP 0x301
+    axireg $REG_QSPI_ADDR    0x0000FEED
+    axireg $REG_QSPI_WDATA_L 0xABCDEF54
+    axireg $REG_QSPI_START   1
+fi
+
+if [ $selector == READ_BREG ]; then
+    axireg $REG_QSPI_CMD     $QSPI_CMD_RD_BREG
+    axireg $REG_QSPI_BANKMAP 0x301
+    axireg $REG_QSPI_ADDR    0x0000FEED
+    axireg $REG_QSPI_START   1
+    axireg $REG_QSPI_RDATA_L
+fi
+
+if [ $selector == WRITE_SMEM ]; then
+    axireg $REG_QSPI_CMD     $QSPI_CMD_WR_SMEM
+    axireg $REG_QSPI_BANKMAP 0x301
+    axireg $REG_QSPI_ADDR    0x00001966
+    axireg $REG_QSPI_WDATA_H 0x11223344
+    axireg $REG_QSPI_WDATA_L 0x55667788
+    axireg $REG_QSPI_START   1
+fi
+
+if [ $selector == READ_SMEM ]; then
+    axireg $REG_QSPI_CMD     $QSPI_CMD_RD_SMEM
+    axireg $REG_QSPI_BANKMAP 0x301
+    axireg $REG_QSPI_ADDR    0x00001966
+    axireg $REG_QSPI_START   1
+    axireg $REG_QSPI_RDATA_H
     axireg $REG_QSPI_RDATA_L
 fi
 

@@ -59,6 +59,13 @@ module qspi_manager #
 
 );
 
+integer i;
+
+// A GenX "host register" that allows us to select 1 or more banks
+localparam QSPI_BANK_EN_REG = 32'h28;
+
+// SMEM starts at this address in all banks
+localparam FIRST_SMEM_ADDR  = 32'h10_0000;
 
 // Bring in qspi fields that we will break out from qspi_req_in and qspi_rsp_out
 `include "qspi_fields.vh"
@@ -66,6 +73,14 @@ module qspi_manager #
 // Break out qspi_req_in and qspi_rsp_out into individual fields
 assign `QSPI_REQ_FIELDS = qspi_req_in;
 assign  qspi_rsp_out    = `QSPI_RSP_FIELDS;
+
+// Bad parameters can result in one of these errors
+reg[2:0]   qspi_error;
+localparam ERROR_NONE      = 0;
+localparam ERROR_BANKSEL   = 1;
+localparam ERROR_ADDRESS   = 2;
+localparam ERROR_UNALIGNED = 3;
+localparam ERROR_BAD_CMD   = 4;
 
 // This is the most recent 64 bits clocked in from the QSPI's miso pins
 reg[63:0] read_result;
@@ -115,6 +130,18 @@ end
 endfunction 
 //=============================================================================
 
+//=============================================================================
+// This block counts the number of 1 bits in "qspi_bankmap"
+//=============================================================================
+reg[3:0] bank_count;
+always @* begin
+    bank_count = 0;
+    for (i=0; i<10; i=i+1) begin
+        if (qspi_bankmap[i]) bank_count = bank_count + 1;
+    end
+end
+//=============================================================================
+
 
 //=============================================================================
 // Define the clock-cycles required to carry out each type of QSPI transaction
@@ -138,15 +165,13 @@ localparam QSPI_RREG_CLKS = QSPI_OPCODE_CLKS
 // Number of clocks to write to 64-bits to SMEM
 localparam QSPI_WMEM_CLKS = QSPI_OPCODE_CLKS
                           + QSPI_ADDR_CLKS
-                          + QSPI_DATA_CLKS
-                          + QSPI_DATA_CLKS;
+                          + 2 * QSPI_DATA_CLKS;
 
 // Number of clocks to write read 64-bits from SMEM
 localparam QSPI_RMEM_CLKS = QSPI_OPCODE_CLKS
                           + QSPI_ADDR_CLKS
                           + QSPI_TAT_CLKS
-                          + QSPI_DATA_CLKS
-                          + QSPI_DATA_CLKS;
+                          + 2 * QSPI_DATA_CLKS;
 //=============================================================================
 
 // Number of nanoseconds per clk
@@ -171,8 +196,7 @@ localparam QSPI_SCK_DELAY = (EVEN_CLK_PER_SCK > 2) ? (EVEN_CLK_PER_SCK / 2) - 1 
 //    tx_cs          = Either CS_HOST or CS_BANK
 //    tx_opcode      = QSPI opcode, in the low bit of every nybble
 //    tx_address     = register or SMEM address,  little-endian
-//    tx_wdata0      = 1st word of data to write, little-endian
-//    tx_wdata1      = 2nd word of data to write, little-endian
+//    tx_wdata[N]    = Nth word of data to write, little-endian
 //    tx_cycle_count = The number of bits in the transaction
 //  
 // "mosi" is clocked out on the rising edge of sck.
@@ -183,11 +207,10 @@ reg        tx_start;
 reg [ 1:0] tx_cs;
 reg [31:0] tx_opcode;
 reg [31:0] tx_address;
-reg [31:0] tx_wdata0;
-reg [31:0] tx_wdata1;
+reg [31:0] tx_wdata[0:7];
 reg [ 7:0] tx_cycle_count;
 //-----------------------------------------------------------------------------
-localparam QSM_DATAWORD_LEN = 128;
+localparam QSM_DATAWORD_LEN = 320; /* tx_opcode + tx_address + tx_wdata[0:7] */
 reg [                 3:0] qsm_state;
 reg [                 5:0] qsm_delay;
 reg [                 6:0] qsm_cycle_counter;
@@ -206,11 +229,6 @@ localparam QSM_WAIT_COMPLETE = 5;
 //-----------------------------------------------------------------------------
 wire tx_idle = (qsm_state == QSM_IDLE) & (tx_start == 0);
 wire sck_rising_edge = (qsm_state == QSM_RISING_SCK) & (qsm_delay == 0);
-//-----------------------------------------------------------------------------
-// We program this host register to select banks for writes to SMEM or writes
-// to bank registers
-//-----------------------------------------------------------------------------
-localparam QSPI_BANK_EN_REG = 32'h28;
 //-----------------------------------------------------------------------------
 
 always @(posedge clk) begin
@@ -233,7 +251,11 @@ always @(posedge clk) begin
                 sck               <= 0;
                 qsm_delay         <= CS_DELAY_NS / NS_PER_CLK;
                 qsm_cycle_counter <= 0;
-                qsm_dataword      <= {tx_opcode, tx_address, tx_wdata0, tx_wdata1};
+                qsm_dataword      <= {
+                                        tx_opcode, tx_address,
+                                        tx_wdata[0], tx_wdata[1], tx_wdata[2], tx_wdata[3],
+                                        tx_wdata[4], tx_wdata[5], tx_wdata[6], tx_wdata[7]
+                                     };
                 qsm_state         <= QSM_ASSERT_CS;
             end
 
@@ -354,6 +376,11 @@ localparam FSM_WR_BULK     = 35;
 localparam FSM_RD_BULK     = 40;
 localparam FSM_CMD_END     = 45;
 //-----------------------------------------------------------------------------
+
+// Clear all of the tx_wdata
+`define CLEAR_TX_WDATA  tx_wdata[0] <= 0; tx_wdata[1] <= 0; tx_wdata[2] <= 0; tx_wdata[3] <= 0; \
+                        tx_wdata[4] <= 0; tx_wdata[5] <= 0; tx_wdata[6] <= 0; tx_wdata[7] <= 0
+
 always @(posedge clk) begin
 
     // This strobes high for a single cycle at a time
@@ -368,45 +395,98 @@ always @(posedge clk) begin
         // Here we wait to be told to start
         FSM_IDLE:
             if (qspi_start) begin
+
+                // By default, no error has occured
+                qspi_error <= 0;
+
+                // Perform the appropriate command
                 case(qspi_cmd)
-                    
+
                     // Write to host register
                     QSPI_CMD_WR_HREG: 
-                        fsm_state <= FSM_WR_HREG;
+                        if (qspi_addr >= FIRST_SMEM_ADDR)
+                            qspi_error <= ERROR_ADDRESS;
+                        else if (qspi_addr & 3)
+                            qspi_error <= ERROR_UNALIGNED;
+                        else
+                            fsm_state <= FSM_WR_HREG;
                     
                     // Read host register
-                    QSPI_CMD_RD_HREG:
-                        fsm_state <= FSM_RD_HREG;
+                    QSPI_CMD_RD_HREG: 
+                        if (qspi_addr >= FIRST_SMEM_ADDR)
+                            qspi_error <= ERROR_ADDRESS;
+                        else if (qspi_addr & 3)
+                            qspi_error <= ERROR_UNALIGNED;
+                        else
+                            fsm_state <= FSM_RD_HREG;
                     
                     // Write to bank register
                     QSPI_CMD_WR_BREG:
-                        begin
+                        if (bank_count == 0)
+                            qspi_error <= ERROR_BANKSEL;
+                        else if (qspi_addr >= FIRST_SMEM_ADDR)
+                            qspi_error <= ERROR_ADDRESS;
+                        else if (qspi_addr & 3)
+                            qspi_error <= ERROR_UNALIGNED;
+                        else begin
                             fsm_state      <= FSM_BANK_SELECT;
                             fsm_next_state <= FSM_WR_BREG;
                         end
 
                     // Read bank register
                     QSPI_CMD_RD_BREG:
-                        begin
+                        if (bank_count != 1)
+                            qspi_error <= ERROR_BANKSEL;
+                        else if (qspi_addr >= FIRST_SMEM_ADDR)
+                            qspi_error <= ERROR_ADDRESS;
+                        else if (qspi_addr & 3)
+                            qspi_error <= ERROR_UNALIGNED;
+                        else begin
                             fsm_state      <= FSM_BANK_SELECT;
                             fsm_next_state <= FSM_RD_BREG;
                         end
 
-                    QSPI_CMD_WR_SMEM: fsm_state <= FSM_WR_SMEM;
-                    QSPI_CMD_RD_SMEM: fsm_state <= FSM_RD_SMEM;
-                    QSPI_CMD_WR_BULK: fsm_state <= FSM_WR_BULK;
-                    QSPI_CMD_RD_BULK: fsm_state <= FSM_RD_BULK;
+                    // Write a 64-bit value to SMEM
+                    QSPI_CMD_WR_SMEM:
+                        if (bank_count == 0)
+                            qspi_error <= ERROR_BANKSEL;
+                        else if (qspi_addr < FIRST_SMEM_ADDR)
+                            qspi_error <= ERROR_ADDRESS;
+                        else if (qspi_addr & 7)
+                            qspi_error <= ERROR_UNALIGNED;
+                        else begin
+                            fsm_state      <= FSM_BANK_SELECT;
+                            fsm_next_state <= FSM_WR_SMEM;                    
+                        end
+
+                    // Write a 64-bit value to SMEM
+                    QSPI_CMD_RD_SMEM:
+                        if (bank_count != 1)
+                            qspi_error <= ERROR_BANKSEL;
+                        else if (qspi_addr < FIRST_SMEM_ADDR)
+                            qspi_error <= ERROR_ADDRESS;
+                        else if (qspi_addr & 7)
+                            qspi_error <= ERROR_UNALIGNED;
+                        else begin
+                            fsm_state      <= FSM_BANK_SELECT;
+                            fsm_next_state <= FSM_RD_SMEM;                    
+                        end
+
+                    // Anything else is an unknown command
+                    default:
+                        qspi_error <= ERROR_BAD_CMD;
+
                 endcase
-            end
+            end 
 
         // Write a value to the QSPI_BANK_EN_REG "bank select" register
         FSM_BANK_SELECT:
             begin
+                `CLEAR_TX_WDATA;
                 tx_cs          <= CS_HOST;
                 tx_opcode      <= make_opcode(OPCODE_WRITE_SINGLE);
                 tx_address     <= swap_endian(QSPI_BANK_EN_REG);
-                tx_wdata0      <= swap_endian(qspi_bankmap);
-                tx_wdata1      <= 0;
+                tx_wdata[0]    <= swap_endian(qspi_bankmap);
                 tx_cycle_count <= QSPI_WREG_CLKS;
                 tx_start       <= 1;
                 fsm_state      <= fsm_next_state;
@@ -414,12 +494,12 @@ always @(posedge clk) begin
 
         // Write to a 32-bit host register
         FSM_WR_HREG:
-            begin
+            begin 
+                `CLEAR_TX_WDATA;
                 tx_cs          <= CS_HOST;
                 tx_opcode      <= make_opcode(OPCODE_WRITE_SINGLE);
                 tx_address     <= swap_endian(qspi_addr);
-                tx_wdata0      <= swap_endian(qspi_wdata[31:0]);
-                tx_wdata1      <= 0;
+                tx_wdata[0]    <= swap_endian(qspi_wdata[31:0]);
                 tx_cycle_count <= QSPI_WREG_CLKS;
                 tx_start       <= 1;
                 fsm_state      <= FSM_CMD_END;
@@ -428,25 +508,23 @@ always @(posedge clk) begin
         // Read from a 32-bit host register
         FSM_RD_HREG:
             begin
+                `CLEAR_TX_WDATA;
                 tx_cs          <= CS_HOST;
                 tx_opcode      <= make_opcode(OPCODE_READ_SINGLE);
                 tx_address     <= swap_endian(qspi_addr);
-                tx_wdata0      <= 0;
-                tx_wdata1      <= 0;
                 tx_cycle_count <= QSPI_RREG_CLKS;
                 tx_start       <= 1;
                 fsm_state      <= FSM_CMD_END;
             end
 
-
         // Write to a 32-bit bank register in one or more banks
         FSM_WR_BREG:
             if (tx_idle) begin
+                `CLEAR_TX_WDATA;
                 tx_cs          <= CS_BANK;
                 tx_opcode      <= make_opcode(OPCODE_WRITE_SINGLE);
                 tx_address     <= swap_endian(qspi_addr);
-                tx_wdata0      <= swap_endian(qspi_wdata[31:0]);
-                tx_wdata1      <= 0;
+                tx_wdata[0]    <= swap_endian(qspi_wdata[31:0]);
                 tx_cycle_count <= QSPI_WREG_CLKS;
                 tx_start       <= 1;
                 fsm_state      <= FSM_CMD_END;
@@ -455,12 +533,51 @@ always @(posedge clk) begin
         // Read from a 32-bit bank register
         FSM_RD_BREG:
             if (tx_idle) begin
+                `CLEAR_TX_WDATA;
                 tx_cs          <= CS_BANK;
                 tx_opcode      <= make_opcode(OPCODE_READ_SINGLE);
                 tx_address     <= swap_endian(qspi_addr);
-                tx_wdata0      <= 0;
-                tx_wdata1      <= 0;
                 tx_cycle_count <= QSPI_RREG_CLKS;
+                tx_start       <= 1;
+                fsm_state      <= FSM_CMD_END;
+            end
+
+        // Write a 64-bit value to SMEM
+        FSM_WR_SMEM:
+            if (tx_idle) begin
+                `CLEAR_TX_WDATA;
+                tx_cs          <= CS_BANK;
+                tx_opcode      <= make_opcode(OPCODE_WRITE_BURST);
+                tx_address     <= swap_endian(qspi_addr);
+                tx_wdata[0]    <= swap_endian(qspi_wdata[1*32 +: 32]);
+                tx_wdata[1]    <= swap_endian(qspi_wdata[0*32 +: 32]);
+                tx_cycle_count <= QSPI_WMEM_CLKS;
+                tx_start       <= 1;
+                fsm_state      <= FSM_CMD_END;
+            end
+
+        // Read a single 32-bit word from SMEM and throw away the
+        // result.   This is required by the GenX hardware
+        FSM_RD_SMEM:
+            if (tx_idle) begin 
+                `CLEAR_TX_WDATA;
+                tx_cs          <= CS_BANK;
+                tx_opcode      <= make_opcode(OPCODE_READ_SINGLE);
+                tx_address     <= swap_endian(qspi_addr);
+                tx_cycle_count <= QSPI_RREG_CLKS;
+                tx_start       <= 1;
+                fsm_state      <= FSM_RD_SMEM+1;
+            end
+
+
+        // Read a 64-bit value from SMEM
+        FSM_RD_SMEM+1:
+            if (tx_idle) begin
+                `CLEAR_TX_WDATA;
+                tx_cs          <= CS_BANK;
+                tx_opcode      <= make_opcode(OPCODE_READ_BURST);
+                tx_address     <= swap_endian(qspi_addr);
+                tx_cycle_count <= QSPI_RMEM_CLKS;
                 tx_start       <= 1;
                 fsm_state      <= FSM_CMD_END;
             end
