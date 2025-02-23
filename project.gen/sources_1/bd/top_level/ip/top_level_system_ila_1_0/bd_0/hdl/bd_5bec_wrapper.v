@@ -14,8 +14,7 @@ module bd_5bec_wrapper
     probe3,
     probe4,
     probe5,
-    probe6,
-    probe7);
+    probe6);
   input clk;
   input [3:0]probe0;
   input [9:0]probe1;
@@ -24,7 +23,6 @@ module bd_5bec_wrapper
   input [0:0]probe4;
   input [63:0]probe5;
   input [0:0]probe6;
-  input [64:0]probe7;
 
   wire clk;
   wire [3:0]probe0;
@@ -34,7 +32,6 @@ module bd_5bec_wrapper
   wire [0:0]probe4;
   wire [63:0]probe5;
   wire [0:0]probe6;
-  wire [64:0]probe7;
 
   bd_5bec bd_5bec_i
        (.clk(clk),
@@ -44,6 +41,5 @@ module bd_5bec_wrapper
         .probe3(probe3),
         .probe4(probe4),
         .probe5(probe5),
-        .probe6(probe6),
-        .probe7(probe7));
+        .probe6(probe6));
 endmodule

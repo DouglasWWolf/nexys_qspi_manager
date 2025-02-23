@@ -21,6 +21,9 @@ localparam RTL_SUBTYPE   = 0;
     ***************   TTD   ***************   
     
      add qspi_error to the response message
+     create read bulk SMEM
+     create write bulk SMEM
+     add spi_clk_div to the dac driver
 */
 
 

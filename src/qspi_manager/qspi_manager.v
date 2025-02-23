@@ -52,14 +52,39 @@ module qspi_manager #
     //-------------------------------------------------------
     output reg [3:0] mosi,      // Data to GenX chip
     input      [3:0] miso,      // Data from GenX chip
-    output reg       sck,       // QSPI serial clock
-    wire             host_csn,  // host chip select (active low)
-    wire             bank_csn   // bank chip select (active low)
+    output           sck,       // QSPI serial clock
+    output           host_csn,  // host chip select (active low)
+    output           bank_csn   // bank chip select (active low)
     //-------------------------------------------------------
 
 );
 
 integer i;
+
+//=============================================================================
+// This instantiates a clock divider that creates our clock output for the
+// QSPI serial bus
+//=============================================================================
+wire      sck_enable;
+wire      sck_rising_edge, sck_falling_edge;
+wire[9:0] sck_cycles;
+//-----------------------------------------------------------------------------
+spi_clk_div # 
+(
+    .CLKIN_HZ         (FREQ_HZ),
+    .CLKOUT_HZ        (QSPI_FREQ),
+    .CYCLE_COUNT_WIDTH(10)
+) 
+clock_divider
+(
+    .clkin        (clk),
+    .clkout       (sck),    
+    .clken        (sck_enable),
+    .rising_edge  (sck_rising_edge),
+    .falling_edge (sck_falling_edge),
+    .cycle_count  (sck_cycles)
+);
+//=============================================================================
 
 // A GenX "host register" that allows us to select 1 or more banks
 localparam QSPI_BANK_EN_REG = 32'h28;
@@ -177,17 +202,6 @@ localparam QSPI_RMEM_CLKS = QSPI_OPCODE_CLKS
 // Number of nanoseconds per clk
 localparam NS_PER_CLK = 1000000000 / FREQ_HZ;
 
-// How many clock cycles are there per SCK cycle?
-localparam CLK_PER_SCK = FREQ_HZ / QSPI_FREQ;
-
-// Round CLK_PER_SCK up to the nearest even number.  This ensures that the frequency of SCK
-// will never be higher than the frequency requested via the SPI_FREQ parameter
-localparam EVEN_CLK_PER_SCK = (CLK_PER_SCK & 1) ? CLK_PER_SCK + 1 : CLK_PER_SCK;
-
-// Ensure that SPI_SCK_DELAY is 0 or positive
-localparam QSPI_SCK_DELAY = (EVEN_CLK_PER_SCK > 2) ? (EVEN_CLK_PER_SCK / 2) - 1 : 0;
-
-
 //=============================================================================
 // This block clocks data out via the QSPI bus "sck" and "mosi" pins
 //
@@ -208,27 +222,46 @@ reg [ 1:0] tx_cs;
 reg [31:0] tx_opcode;
 reg [31:0] tx_address;
 reg [31:0] tx_wdata[0:7];
-reg [ 7:0] tx_cycle_count;
+reg [ 9:0] tx_cycle_count;
 //-----------------------------------------------------------------------------
 localparam QSM_DATAWORD_LEN = 320; /* tx_opcode + tx_address + tx_wdata[0:7] */
 reg [                 3:0] qsm_state;
 reg [                 5:0] qsm_delay;
-reg [                 6:0] qsm_cycle_counter;
-reg [QSM_DATAWORD_LEN-1:0] qsm_dataword;
+reg [0:QSM_DATAWORD_LEN-1] qsm_dataword;
 //-----------------------------------------------------------------------------
 // These are the states for qsm_state
 //-----------------------------------------------------------------------------
 localparam QSM_IDLE          = 0;
 localparam QSM_ASSERT_CS     = 1;
-localparam QSM_FALLING_SCK   = 2;
-localparam QSM_RISING_SCK    = 3;
-localparam QSM_RELEASE_CS    = 4;
-localparam QSM_WAIT_COMPLETE = 5;
+localparam QSM_CLOCKING_BITS = 2;
+localparam QSM_RELEASE_CS    = 3;
+localparam QSM_WAIT_COMPLETE = 4;
 //-----------------------------------------------------------------------------
 // This is high when this state machine is idle
-//-----------------------------------------------------------------------------
 wire tx_idle = (qsm_state == QSM_IDLE) & (tx_start == 0);
-wire sck_rising_edge = (qsm_state == QSM_RISING_SCK) & (qsm_delay == 0);
+//-----------------------------------------------------------------------------
+// The QSPI clock is only enabled when we're actively clocking out bits
+assign sck_enable = (qsm_state == QSM_CLOCKING_BITS);
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+// Determine the state of mosi
+//-----------------------------------------------------------------------------
+always @* begin
+
+    // If the QSPI state machine isn't running, default mosi to 0
+    if (qsm_state == QSM_IDLE)
+        mosi = 0;
+    
+    // On the falling edge of sck, mosi immediate takes on the value of
+    // the next 4-bits of qsm_dataword
+    else if ((qsm_state == QSM_CLOCKING_BITS) && sck_falling_edge)
+        mosi = qsm_dataword[4:7];
+
+    // In all other cases, mosi is the left-most 4 bits of qsm_dataword
+    else
+        mosi = qsm_dataword[0:3];
+end
 //-----------------------------------------------------------------------------
 
 always @(posedge clk) begin
@@ -238,7 +271,6 @@ always @(posedge clk) begin
 
     if (resetn == 0) begin
         qsm_state   <= QSM_IDLE;
-        sck         <= 0;
         chip_select <= CS_NONE;
     end
 
@@ -246,54 +278,37 @@ always @(posedge clk) begin
 
         // Here we wait for a new command to arrive
         QSM_IDLE:
-            if (tx_start) begin
-                chip_select       <= tx_cs;
-                sck               <= 0;
-                qsm_delay         <= CS_DELAY_NS / NS_PER_CLK;
-                qsm_cycle_counter <= 0;
-                qsm_dataword      <= {
-                                        tx_opcode, tx_address,
-                                        tx_wdata[0], tx_wdata[1], tx_wdata[2], tx_wdata[3],
-                                        tx_wdata[4], tx_wdata[5], tx_wdata[6], tx_wdata[7]
-                                     };
-                qsm_state         <= QSM_ASSERT_CS;
+            begin
+                qsm_dataword <= { tx_opcode, tx_address,
+                                  tx_wdata[0], tx_wdata[1], tx_wdata[2], tx_wdata[3],
+                                  tx_wdata[4], tx_wdata[5], tx_wdata[6], tx_wdata[7]};
+
+                if (tx_start) begin
+                    chip_select <= tx_cs;
+                    qsm_delay   <= CS_DELAY_NS / NS_PER_CLK - 1;
+                    qsm_state   <= QSM_ASSERT_CS;
+                end
             end
 
         // Need a delay after asserting chip-select
         QSM_ASSERT_CS:
-            if (qsm_delay == 0) qsm_state <= QSM_FALLING_SCK;
+            if (qsm_delay == 0) qsm_state <= QSM_CLOCKING_BITS;
 
-        // Drive out the next outgoing nybble on mosi, and drive SCK low
-        QSM_FALLING_SCK:
-            if (qsm_delay == 0) begin
-                 
-                sck          <= 0;
-                mosi         <= qsm_dataword[QSM_DATAWORD_LEN-1 -: 4];
+        // On a falling edge of sck, drive out the next outgoing nybble on mosi
+        QSM_CLOCKING_BITS:
+            if (sck_falling_edge) begin
                 qsm_dataword <= qsm_dataword << 4;
                 
-                if (qsm_cycle_counter < tx_cycle_count) begin
-                    qsm_delay <= QSPI_SCK_DELAY;
-                    qsm_state <= QSM_RISING_SCK;
-                end else begin
-                    qsm_state <= QSM_RELEASE_CS;
+                if (sck_cycles == tx_cycle_count) begin
+                    qsm_state  <= QSM_RELEASE_CS;
                 end
-
-            end
-
-        // Drive SCK high.  Data is clocked in by the peer QSPI on highgoing edges of clk
-        QSM_RISING_SCK:
-            if (qsm_delay == 0) begin
-                sck               <= 1;
-                qsm_delay         <= QSPI_SCK_DELAY;
-                qsm_cycle_counter <= qsm_cycle_counter + 1;
-                qsm_state         <= QSM_FALLING_SCK;
             end
 
         // Here we release the chip-select
         QSM_RELEASE_CS:
             begin
                 chip_select <= CS_NONE;
-                qsm_delay   <= CS_DELAY_NS/NS_PER_CLK;
+                qsm_delay   <= CS_DELAY_NS/NS_PER_CLK -1;
                 qsm_state   <= QSM_WAIT_COMPLETE;
             end
 
@@ -302,7 +317,6 @@ always @(posedge clk) begin
             if (qsm_delay == 0) qsm_state <= QSM_IDLE;
 
     endcase 
-
 end
 //=============================================================================
 
