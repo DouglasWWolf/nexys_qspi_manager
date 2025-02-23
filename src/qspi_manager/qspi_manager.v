@@ -253,9 +253,9 @@ always @* begin
     if (qsm_state == QSM_IDLE)
         mosi = 0;
     
-    // On the falling edge of sck, mosi immediate takes on the value of
+    // On the falling edge of sck, mosi immediately takes on the value of
     // the next 4-bits of qsm_dataword
-    else if ((qsm_state == QSM_CLOCKING_BITS) && sck_falling_edge)
+    else if (sck_falling_edge)
         mosi = qsm_dataword[4:7];
 
     // In all other cases, mosi is the left-most 4 bits of qsm_dataword
