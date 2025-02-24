@@ -73,6 +73,7 @@ localparam REG_QSPI_WDATA_L = 4;
 localparam REG_QSPI_START   = 5;
 localparam REG_QSPI_RDATA_H = 6;
 localparam REG_QSPI_RDATA_L = 7;
+localparam REG_QSPI_ERROR   = 8;
 //==========================================================================
 
 
@@ -113,6 +114,9 @@ localparam ADDR_MASK = (1 << AW) - 1;
 
 // This is data read in via the QSPI
 reg[63:0] qspi_read_result;
+
+// This is the error code returned by a QSPI transaction
+reg[QSPI_ERROR_LEN-1:0] qspi_error_result;
 
 //==========================================================================
 // This state machine handles AXI4-Lite write requests
@@ -157,15 +161,14 @@ always @(posedge clk) begin
 
         // Wait for the transaction to complete
         1:  if (qspi_idle) begin
-                qspi_read_result <= qspi_rdata;
-                ashi_write_state <= 0;
+                qspi_read_result  <= qspi_rdata;
+                qspi_error_result <= qspi_error;
+                ashi_write_state  <= 0;
             end
 
     endcase
 end
 //==========================================================================
-
-
 
 
 
@@ -197,6 +200,7 @@ always @(posedge clk) begin
             REG_QSPI_START:   ashi_rdata <= (qspi_idle == 0);
             REG_QSPI_RDATA_H: ashi_rdata <= qspi_read_result[63:32];
             REG_QSPI_RDATA_L: ashi_rdata <= qspi_read_result[31:00];
+            REG_QSPI_ERROR:   ashi_rdata <= qspi_error_result;
 
             // Reads of any other register are a decode-error
             default: ashi_rresp <= DECERR;

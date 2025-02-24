@@ -11,8 +11,10 @@ localparam QSPI_ADDR_LEN    = `QSPI_ADDR_LEN   ;
 localparam QSPI_WDATA_LEN   = `QSPI_WDATA_LEN  ;
 localparam QSPI_START_LEN   = `QSPI_START_LEN  ;
 
+// Define the widths of the QSPI response fields
 localparam QSPI_RDATA_LEN   = `QSPI_RDATA_LEN  ;
 localparam QSPI_IDLE_LEN    = `QSPI_IDLE_LEN   ;
+localparam QSPI_ERROR_LEN   = `QSPI_ERROR_LEN  ;
 
 /*
 ****************************************************************************
@@ -34,6 +36,7 @@ localparam COMPUTED_REQ_WIDTH = QSPI_CMD_LEN
 
 // Compute the total width the QSPI reponse fields
 localparam COMPUTED_RSP_WIDTH = QSPI_RDATA_LEN
+                              + QSPI_ERROR_LEN
                               + QSPI_IDLE_LEN;
 
 // Generate a "field too big" error if the computed width doesn't match `QSPI_REQ_WIDTH
@@ -60,6 +63,7 @@ wire[QSPI_RSP_ERROR:0] qspi_rsp_dummy;
     wire[  `QSPI_WDATA_LEN-1:0] qspi_wdata;
     wire[  `QSPI_START_LEN-1:0] qspi_start;
     reg [  `QSPI_RDATA_LEN-1:0] qspi_rdata; 
+    reg [  `QSPI_ERROR_LEN-1:0] qspi_error;
     reg [   `QSPI_IDLE_LEN-1:0] qspi_idle;
 `else
     reg [    `QSPI_CMD_LEN-1:0] qspi_cmd;  
@@ -68,13 +72,14 @@ wire[QSPI_RSP_ERROR:0] qspi_rsp_dummy;
     reg [  `QSPI_WDATA_LEN-1:0] qspi_wdata;
     reg [  `QSPI_START_LEN-1:0] qspi_start;
     wire[  `QSPI_RDATA_LEN-1:0] qspi_rdata;
+    wire[  `QSPI_ERROR_LEN-1:0] qspi_error;
     wire[   `QSPI_IDLE_LEN-1:0] qspi_idle;
 `endif
 //=============================================================================
 
 
 `define QSPI_REQ_FIELDS {qspi_cmd, qspi_bankmap, qspi_addr, qspi_wdata, qspi_start}
-`define QSPI_RSP_FIELDS {qspi_idle, qspi_rdata}
+`define QSPI_RSP_FIELDS {qspi_idle, qspi_error, qspi_rdata}
 
 
 //=============================================================================

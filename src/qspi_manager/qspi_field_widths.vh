@@ -13,11 +13,12 @@
 `define QSPI_START_LEN    1
 
 // This should be the sum of the lengths below
-`define QSPI_RSP_WIDTH   65
+`define QSPI_RSP_WIDTH   68
 
 // These are the lengths of the individual fields in a QSPI response
 `define QSPI_RDATA_LEN   64
 `define QSPI_IDLE_LEN     1
+`define QSPI_ERROR_LEN    3
 
 // End of code gaurd
 `endif

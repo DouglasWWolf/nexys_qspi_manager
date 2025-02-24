@@ -26,8 +26,8 @@
 
 module qspi_manager #
 (
-    parameter FREQ_HZ   = 100000000,
-    parameter QSPI_FREQ =  50000000    
+    parameter FREQ_HZ   = 100000000, 
+    parameter QSPI_FREQ =  25000000    
 )  
 (
     input clk, resetn,
@@ -79,8 +79,9 @@ clock_divider
 (
     .clkin        (clk),
     .clkout       (sck),    
+    .raw_clkout   (),
     .clken        (sck_enable),
-    .rising_edge  (sck_rising_edge),
+    .rising_edge  (),
     .falling_edge (sck_falling_edge),
     .cycle_count  (sck_cycles)
 );
@@ -100,7 +101,6 @@ assign `QSPI_REQ_FIELDS = qspi_req_in;
 assign  qspi_rsp_out    = `QSPI_RSP_FIELDS;
 
 // Bad parameters can result in one of these errors
-reg[2:0]   qspi_error;
 localparam ERROR_NONE      = 0;
 localparam ERROR_BANKSEL   = 1;
 localparam ERROR_ADDRESS   = 2;
@@ -197,6 +197,7 @@ localparam QSPI_RMEM_CLKS = QSPI_OPCODE_CLKS
                           + QSPI_ADDR_CLKS
                           + QSPI_TAT_CLKS
                           + 2 * QSPI_DATA_CLKS;
+
 //=============================================================================
 
 // Number of nanoseconds per clk

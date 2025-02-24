@@ -272,7 +272,7 @@
         <spirit:wire>
           <spirit:direction>out</spirit:direction>
           <spirit:vector>
-            <spirit:left spirit:format="long">64</spirit:left>
+            <spirit:left spirit:format="long">67</spirit:left>
             <spirit:right spirit:format="long">0</spirit:right>
           </spirit:vector>
           <spirit:wireTypeDefs>
@@ -361,7 +361,7 @@
       <spirit:modelParameter spirit:dataType="integer">
         <spirit:name>QSPI_FREQ</spirit:name>
         <spirit:displayName>Qspi Freq</spirit:displayName>
-        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.QSPI_FREQ">50000000</spirit:value>
+        <spirit:value spirit:format="long" spirit:resolve="generated" spirit:id="MODELPARAM_VALUE.QSPI_FREQ">25000000</spirit:value>
       </spirit:modelParameter>
     </spirit:modelParameters>
   </spirit:model>
@@ -382,7 +382,7 @@
     <spirit:parameter>
       <spirit:name>QSPI_FREQ</spirit:name>
       <spirit:displayName>Qspi Freq</spirit:displayName>
-      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.QSPI_FREQ">50000000</spirit:value>
+      <spirit:value spirit:format="long" spirit:resolve="user" spirit:id="PARAM_VALUE.QSPI_FREQ">25000000</spirit:value>
     </spirit:parameter>
     <spirit:parameter>
       <spirit:name>Component_Name</spirit:name>

@@ -2,25 +2,24 @@
 //================================================================================================
 //    Date      Vers   Who  Changes
 // -----------------------------------------------------------------------------------------------
-// 14-Aug-2024  1.0.0  DWW  Initial creation
+// 22-Feb-2025  1.0.0  DWW  Initial creation
 //================================================================================================
 localparam VERSION_MAJOR = 1;
 localparam VERSION_MINOR = 0;
 localparam VERSION_BUILD = 0;
 localparam VERSION_RCAND = 0;
 
-localparam VERSION_DAY   = 14;
-localparam VERSION_MONTH = 8;
-localparam VERSION_YEAR  = 2024;
+localparam VERSION_DAY   = 22;
+localparam VERSION_MONTH = 2;
+localparam VERSION_YEAR  = 2025;
 
-localparam RTL_TYPE      = 81424;
+localparam RTL_TYPE      = 22225;
 localparam RTL_SUBTYPE   = 0;
 
 
 /*
     ***************   TTD   ***************   
-    
-     add qspi_error to the response message
+
      create read bulk SMEM
      create write bulk SMEM
      add spi_clk_div to the dac driver

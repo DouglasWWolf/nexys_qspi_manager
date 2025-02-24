@@ -7,6 +7,46 @@ REG_BASE=0x1000
     REG_QSPI_START=$((REG_BASE + 4 * 5))
   REG_QSPI_RDATA_H=$((REG_BASE + 4 * 6))
   REG_QSPI_RDATA_L=$((REG_BASE + 4 * 7))
+    REG_QSPI_ERROR=$((REG_BASE + 4 * 8))
+
+
+
+display_error()
+{
+    local err;
+    err=$(axireg -dec $REG_QSPI_ERROR)
+
+    if [ $err -eq 1 ]; then
+        echo "ERROR: Improper bank selection"
+        exit 1
+    fi
+
+    if [ $err -eq 2 ]; then
+        echo "ERROR: Improper address"
+        exit 1
+    fi
+
+    if [ $err -eq 3 ]; then
+        echo "ERROR: Unaligned access"
+        exit 1
+    fi
+
+    if [ $err -eq 4 ]; then
+        echo "ERROR: Bad command"
+        exit 1
+    fi
+
+    if [ $err -ne 0 ]; then
+        echo "ERROR: Unknown error $err"
+        exit 1
+    fi
+
+}
+
+#
+# SMEM starts at this address
+#
+SMEM=0x100000
 
 
 #
@@ -30,12 +70,14 @@ if [ $selector == WRITE_HREG ]; then
     axireg $REG_QSPI_ADDR    0x0000FEEC
     axireg $REG_QSPI_WDATA_L 0xABCDEF54
     axireg $REG_QSPI_START   1
+    display_error
 fi
 
 if [ $selector == READ_HREG ]; then
     axireg $REG_QSPI_CMD     $QSPI_CMD_RD_HREG
     axireg $REG_QSPI_ADDR    0x4
     axireg $REG_QSPI_START   1
+    display_error
     axireg $REG_QSPI_RDATA_L
 fi
 
@@ -45,30 +87,34 @@ if [ $selector == WRITE_BREG ]; then
     axireg $REG_QSPI_ADDR    0x0000FEEC
     axireg $REG_QSPI_WDATA_L 0xABCDEF54
     axireg $REG_QSPI_START   1
+    display_error
 fi
 
 if [ $selector == READ_BREG ]; then
     axireg $REG_QSPI_CMD     $QSPI_CMD_RD_BREG
-    axireg $REG_QSPI_BANKMAP 0x301
+    axireg $REG_QSPI_BANKMAP 0x16
     axireg $REG_QSPI_ADDR    0x0000FEEC
     axireg $REG_QSPI_START   1
+    display_error
     axireg $REG_QSPI_RDATA_L
 fi
 
 if [ $selector == WRITE_SMEM ]; then
     axireg $REG_QSPI_CMD     $QSPI_CMD_WR_SMEM
     axireg $REG_QSPI_BANKMAP 0x301
-    axireg $REG_QSPI_ADDR    0x00001968
+    axireg $REG_QSPI_ADDR    $((SMEM | 0x1968))
     axireg $REG_QSPI_WDATA_H 0x11223344
     axireg $REG_QSPI_WDATA_L 0x55667788
     axireg $REG_QSPI_START   1
+    display_error
 fi
 
 if [ $selector == READ_SMEM ]; then
     axireg $REG_QSPI_CMD     $QSPI_CMD_RD_SMEM
-    axireg $REG_QSPI_BANKMAP 0x301
-    axireg $REG_QSPI_ADDR    0x00001968
+    axireg $REG_QSPI_BANKMAP 0x4
+    axireg $REG_QSPI_ADDR    $((SMEM | 0x1968))
     axireg $REG_QSPI_START   1
+    display_error
     axireg $REG_QSPI_RDATA_H
     axireg $REG_QSPI_RDATA_L
 fi
