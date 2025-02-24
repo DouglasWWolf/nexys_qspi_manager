@@ -20,6 +20,8 @@ localparam RTL_SUBTYPE   = 0;
 /*
     ***************   TTD   ***************   
 
+     rework the ltc-2656 simulator to use modern clocking on SCK and CS
+     rename simulator stuff to gxsim
      create read bulk SMEM
      create write bulk SMEM
      add spi_clk_div to the dac driver

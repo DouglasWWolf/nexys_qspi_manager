@@ -65,17 +65,20 @@ selector=$1
 test -z $selector && selector=WRITE_HREG
 
 if [ $selector == WRITE_HREG ]; then
+    test -z $2 && addr=0x04 || addr=$2
+    test -z $3 && valu=0x19661975 || value=$3
     axireg $REG_QSPI_CMD     $QSPI_CMD_WR_HREG
     axireg $REG_QSPI_BANKMAP 0
-    axireg $REG_QSPI_ADDR    0x0000FEEC
-    axireg $REG_QSPI_WDATA_L 0xABCDEF54
+    axireg $REG_QSPI_ADDR    $addr
+    axireg $REG_QSPI_WDATA_L $value
     axireg $REG_QSPI_START   1
     display_error
 fi
 
 if [ $selector == READ_HREG ]; then
+    test -z $2 && addr=0x04 || addr=$2
     axireg $REG_QSPI_CMD     $QSPI_CMD_RD_HREG
-    axireg $REG_QSPI_ADDR    0x4
+    axireg $REG_QSPI_ADDR    $addr
     axireg $REG_QSPI_START   1
     display_error
     axireg $REG_QSPI_RDATA_L

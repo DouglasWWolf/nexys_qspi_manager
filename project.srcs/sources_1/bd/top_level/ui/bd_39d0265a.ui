@@ -7,55 +7,52 @@
    "No Loops_ExpandedHierarchyInLayout":"",
    "No Loops_Layout":"# # String gsaved with Nlview 7.0r4  2019-12-20 bk=1.5203 VDI=41 GEI=36 GUI=JA:10.0 TLS
 #  -string -flagsOSRD
-preplace port UART -pg 1 -lvl 0 -x 0 -y 400 -defaultsOSRD -left
-preplace port port-id_CLK100MHZ -pg 1 -lvl 0 -x 0 -y 460 -defaultsOSRD
-preplace port port-id_CPU_RESETN -pg 1 -lvl 0 -x 0 -y 480 -defaultsOSRD
-preplace inst source_100mhz -pg 1 -lvl 1 -x 140 -y 460 -defaultsOSRD -pinDir clk_in left -pinY clk_in 0L -pinDir resetn_in left -pinY resetn_in 20L -pinDir sys_clk right -pinY sys_clk 0R -pinBusDir sys_resetn right -pinBusY sys_resetn 20R
-preplace inst uart_axi_bridge -pg 1 -lvl 2 -x 400 -y 400 -defaultsOSRD -pinDir UART left -pinY UART 0L -pinDir M_AXI right -pinY M_AXI 40R -pinDir s_axi_aclk left -pinY s_axi_aclk 20L -pinDir s_axi_aresetn left -pinY s_axi_aresetn 40L
-preplace inst system_interconnect -pg 1 -lvl 3 -x 680 -y 440 -swap {0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 40 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 20 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61} -defaultsOSRD -pinDir S00_AXI left -pinY S00_AXI 0L -pinDir M00_AXI right -pinY M00_AXI 140R -pinDir M01_AXI right -pinY M01_AXI 0R -pinDir aclk left -pinY aclk 20L -pinDir aresetn left -pinY aresetn 40L
-preplace inst system_ila_1 -pg 1 -lvl 10 -x 2710 -y 60 -swap {6 0 1 2 3 4 5 7} -defaultsOSRD -pinDir clk left -pinY clk 120L -pinBusDir probe0 left -pinBusY probe0 0L -pinBusDir probe1 left -pinBusY probe1 20L -pinBusDir probe2 left -pinBusY probe2 40L -pinBusDir probe3 left -pinBusY probe3 60L -pinBusDir probe4 left -pinBusY probe4 80L -pinBusDir probe5 left -pinBusY probe5 100L -pinBusDir probe6 left -pinBusY probe6 140L
-preplace inst axi_qspi_iface -pg 1 -lvl 4 -x 990 -y 440 -defaultsOSRD -pinDir S_AXI left -pinY S_AXI 0L -pinDir clk left -pinY clk 20L -pinDir resetn left -pinY resetn 40L -pinBusDir qspi_req_out right -pinBusY qspi_req_out 0R -pinBusDir qspi_rsp_in right -pinBusY qspi_rsp_in 20R
-preplace inst axi_revision -pg 1 -lvl 4 -x 990 -y 580 -defaultsOSRD -pinDir S_AXI left -pinY S_AXI 0L -pinDir AXI_ACLK left -pinY AXI_ACLK 20L -pinDir AXI_ARESETN left -pinY AXI_ARESETN 40L
-preplace inst system_ila_0 -pg 1 -lvl 7 -x 1860 -y 520 -swap {1 2 3 0 4 5} -defaultsOSRD -pinDir clk left -pinY clk 20L -pinBusDir probe0 left -pinBusY probe0 40L -pinBusDir probe1 left -pinBusY probe1 60L -pinBusDir probe2 left -pinBusY probe2 0L -pinBusDir probe3 left -pinBusY probe3 80L -pinBusDir probe4 left -pinBusY probe4 100L
-preplace inst system_ila_2 -pg 1 -lvl 9 -x 2530 -y 260 -swap {0 1 2 6 5 4 3} -defaultsOSRD -pinDir clk left -pinY clk 0L -pinBusDir probe0 left -pinBusY probe0 20L -pinBusDir probe1 left -pinBusY probe1 40L -pinBusDir probe2 left -pinBusY probe2 300L -pinBusDir probe3 left -pinBusY probe3 280L -pinBusDir probe4 left -pinBusY probe4 260L -pinBusDir probe5 left -pinBusY probe5 240L
-preplace inst genx_qspi_handler -pg 1 -lvl 8 -x 2270 -y 260 -swap {0 9 3 2 1 4 5 6 7 8} -defaultsOSRD -pinDir clk left -pinY clk 0L -pinDir resetn left -pinY resetn 180L -pinDir dbg_notify_write right -pinY dbg_notify_write 40R -pinDir dbg_notify_read right -pinY dbg_notify_read 20R -pinBusDir sck_counts left -pinBusY sck_counts 20L -pinBusDir opcode left -pinBusY opcode 40L -pinBusDir address left -pinBusY address 60L -pinBusDir chip_select left -pinBusY chip_select 80L -pinDir async_notify_read left -pinY async_notify_read 100L -pinDir async_notify_write left -pinY async_notify_write 120L
-preplace inst qspi_manager -pg 1 -lvl 5 -x 1360 -y 60 -swap {0 1 2 3 4 5 6 7 15 9 10 12 8 11 13 14} -defaultsOSRD -pinDir clk left -pinY clk 300L -pinDir resetn left -pinY resetn 320L -pinBusDir dbg_qspi_cmd right -pinBusY dbg_qspi_cmd 0R -pinBusDir dbg_qspi_bankmap right -pinBusY dbg_qspi_bankmap 20R -pinBusDir dbg_qspi_addr right -pinBusY dbg_qspi_addr 40R -pinBusDir dbg_qspi_wdata right -pinBusY dbg_qspi_wdata 60R -pinBusDir dbg_qspi_start right -pinBusY dbg_qspi_start 80R -pinBusDir dbg_qspi_rdata right -pinBusY dbg_qspi_rdata 100R -pinBusDir dbg_qspi_idle right -pinBusY dbg_qspi_idle 400R -pinBusDir qspi_req_in left -pinBusY qspi_req_in 380L -pinBusDir qspi_rsp_out left -pinBusY qspi_rsp_out 400L -pinBusDir mosi right -pinBusY mosi 300R -pinBusDir miso right -pinBusY miso 240R -pinDir sck right -pinY sck 280R -pinDir host_csn right -pinY host_csn 340R -pinDir bank_csn right -pinY bank_csn 360R
-preplace inst genx_qspi_sim -pg 1 -lvl 7 -x 1860 -y 280 -swap {1 2 0 3 4 5 6 7 8 9 10} -defaultsOSRD -pinDir sck left -pinY sck 40L -pinBusDir mosi left -pinBusY mosi 60L -pinBusDir miso left -pinBusY miso 20L -pinDir host_csn left -pinY host_csn 80L -pinDir bank_csn left -pinY bank_csn 100L -pinBusDir sck_counts right -pinBusY sck_counts 0R -pinBusDir opcode right -pinBusY opcode 20R -pinBusDir address right -pinBusY address 40R -pinBusDir chip_select right -pinBusY chip_select 60R -pinDir notify_read right -pinY notify_read 80R -pinDir notify_write right -pinY notify_write 100R
-preplace netloc axi_qspi_iface_0_qspi_req_out 1 4 1 N 440
-preplace netloc clk_in1_0_1 1 0 1 NJ 460
-preplace netloc ext_reset_in_0_1 1 0 1 NJ 480
-preplace netloc genx_qspi_sim_miso 1 5 2 NJ 300 1620
-preplace netloc qspi_manager_bank_csn 1 5 2 N 420 1720
-preplace netloc qspi_manager_dbg_qspi_addr 1 5 5 NJ 100 N 100 N 100 N 100 N
-preplace netloc qspi_manager_dbg_qspi_bankmap 1 5 5 NJ 80 N 80 N 80 N 80 N
-preplace netloc qspi_manager_dbg_qspi_cmd 1 5 5 NJ 60 N 60 N 60 N 60 N
-preplace netloc qspi_manager_dbg_qspi_idle 1 5 5 NJ 460 N 460 2080 200 N 200 N
-preplace netloc qspi_manager_dbg_qspi_rdata 1 5 5 NJ 160 N 160 N 160 N 160 N
-preplace netloc qspi_manager_dbg_qspi_start 1 5 5 NJ 140 N 140 N 140 N 140 N
-preplace netloc qspi_manager_dbg_qspi_wdata 1 5 5 NJ 120 N 120 N 120 N 120 N
-preplace netloc qspi_manager_host_csn 1 5 2 N 400 1700
-preplace netloc qspi_manager_mosi 1 5 2 N 360 1680
-preplace netloc qspi_manager_qspi_rsp_out 1 4 1 N 460
-preplace netloc qspi_manager_sck 1 5 2 N 340 1660
-preplace netloc source_100mhz_sys_clk 1 1 9 260 340 520 360 840 360 1160 540 1560 320 1640 220 2100 180 2440 180 N
-preplace netloc source_100mhz_sys_resetn 1 1 7 280 490 540 380 820 380 1140 520 1580 440 N 440 N
-preplace netloc genx_qspi_sim_sck_counts 1 7 2 2060 560 N
-preplace netloc genx_qspi_sim_opcode 1 7 2 2040 540 N
-preplace netloc genx_qspi_sim_address 1 7 2 2020 520 N
-preplace netloc genx_qspi_sim_notify_read 1 7 1 N 360
-preplace netloc genx_qspi_sim_chip_select 1 7 2 2000 500 N
-preplace netloc genx_qspi_sim_notify_write 1 7 1 N 380
-preplace netloc genx_qspi_handler_dbg_notify_read 1 8 1 N 280
-preplace netloc genx_qspi_handler_dbg_notify_write 1 8 1 N 300
-preplace netloc axi_uartlite_UART 1 0 2 NJ 400 NJ
-preplace netloc system_interconnect_M00_AXI 1 3 1 N 580
-preplace netloc system_interconnect_M01_AXI 1 3 1 N 440
-preplace netloc uart_axi_bridge_M_AXI 1 2 1 N 440
-levelinfo -pg 1 0 140 400 680 990 1360 1600 1860 2270 2530 2710 2800
-pagesize -pg 1 -db -bbox -sgen -150 0 2800 680
+preplace port UART -pg 1 -lvl 0 -x 0 -y 260 -defaultsOSRD -left
+preplace port port-id_CLK100MHZ -pg 1 -lvl 0 -x 0 -y 320 -defaultsOSRD
+preplace port port-id_CPU_RESETN -pg 1 -lvl 0 -x 0 -y 340 -defaultsOSRD
+preplace inst source_100mhz -pg 1 -lvl 1 -x 140 -y 320 -defaultsOSRD -pinDir clk_in left -pinY clk_in 0L -pinDir resetn_in left -pinY resetn_in 20L -pinDir sys_clk right -pinY sys_clk 0R -pinBusDir sys_resetn right -pinBusY sys_resetn 20R
+preplace inst uart_axi_bridge -pg 1 -lvl 2 -x 400 -y 260 -defaultsOSRD -pinDir UART left -pinY UART 0L -pinDir M_AXI right -pinY M_AXI 40R -pinDir s_axi_aclk left -pinY s_axi_aclk 20L -pinDir s_axi_aresetn left -pinY s_axi_aresetn 40L
+preplace inst system_interconnect -pg 1 -lvl 3 -x 680 -y 300 -swap {0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 40 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 20 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61} -defaultsOSRD -pinDir S00_AXI left -pinY S00_AXI 0L -pinDir M00_AXI right -pinY M00_AXI 140R -pinDir M01_AXI right -pinY M01_AXI 0R -pinDir aclk left -pinY aclk 20L -pinDir aresetn left -pinY aresetn 40L
+preplace inst axi_qspi_iface -pg 1 -lvl 4 -x 990 -y 300 -defaultsOSRD -pinDir S_AXI left -pinY S_AXI 0L -pinDir clk left -pinY clk 20L -pinDir resetn left -pinY resetn 40L -pinBusDir qspi_req_out right -pinBusY qspi_req_out 0R -pinBusDir qspi_rsp_in right -pinBusY qspi_rsp_in 20R
+preplace inst axi_revision -pg 1 -lvl 4 -x 990 -y 440 -defaultsOSRD -pinDir S_AXI left -pinY S_AXI 0L -pinDir AXI_ACLK left -pinY AXI_ACLK 20L -pinDir AXI_ARESETN left -pinY AXI_ARESETN 40L
+preplace inst system_ila_0 -pg 1 -lvl 7 -x 1840 -y 440 -swap {2 3 4 1 5 6 0 7 8} -defaultsOSRD -pinDir clk left -pinY clk 40L -pinBusDir probe0 left -pinBusY probe0 60L -pinBusDir probe1 left -pinBusY probe1 80L -pinBusDir probe2 left -pinBusY probe2 20L -pinBusDir probe3 left -pinBusY probe3 100L -pinBusDir probe4 left -pinBusY probe4 120L -pinBusDir probe5 left -pinBusY probe5 0L -pinBusDir probe6 left -pinBusY probe6 140L -pinBusDir probe7 right -pinBusY probe7 0R
+preplace inst system_ila_2 -pg 1 -lvl 9 -x 2520 -y 60 -swap {0 1 2 8 7 6 5 4 3} -defaultsOSRD -pinDir clk left -pinY clk 0L -pinBusDir probe0 left -pinBusY probe0 60L -pinBusDir probe1 left -pinBusY probe1 320L -pinBusDir probe2 left -pinBusY probe2 500L -pinBusDir probe3 left -pinBusY probe3 480L -pinBusDir probe4 left -pinBusY probe4 460L -pinBusDir probe5 left -pinBusY probe5 440L -pinBusDir probe6 left -pinBusY probe6 420L -pinBusDir probe7 left -pinBusY probe7 400L
+preplace inst genx_qspi_sim -pg 1 -lvl 7 -x 1840 -y 140 -swap {1 2 0 3 4 7 6 9 14 8 12 5 10 11 13} -defaultsOSRD -pinDir sck left -pinY sck 120L -pinBusDir mosi left -pinBusY mosi 140L -pinBusDir miso left -pinBusY miso 100L -pinDir host_csn left -pinY host_csn 160L -pinDir bank_csn left -pinY bank_csn 180L -pinBusDir sck_counts right -pinBusY sck_counts 40R -pinBusDir opcode right -pinBusY opcode 20R -pinBusDir address right -pinBusY address 80R -pinBusDir chip_select right -pinBusY chip_select 180R -pinBusDir wdata_h right -pinBusY wdata_h 60R -pinBusDir wdata_l right -pinBusY wdata_l 140R -pinBusDir rdata_h right -pinBusY rdata_h 0R -pinBusDir rdata_l right -pinBusY rdata_l 100R -pinDir notify_read right -pinY notify_read 120R -pinDir notify_write right -pinY notify_write 160R
+preplace inst qspi_manager -pg 1 -lvl 5 -x 1350 -y 200 -swap {0 1 2 3 4 7 5 6 8 9} -defaultsOSRD -pinBusDir dbg_read_result right -pinBusY dbg_read_result 0R -pinDir clk left -pinY clk 20L -pinDir resetn left -pinY resetn 40L -pinBusDir qspi_req_in left -pinBusY qspi_req_in 100L -pinBusDir qspi_rsp_out left -pinBusY qspi_rsp_out 120L -pinBusDir mosi right -pinBusY mosi 80R -pinBusDir miso right -pinBusY miso 20R -pinDir sck right -pinY sck 60R -pinDir host_csn right -pinY host_csn 100R -pinDir bank_csn right -pinY bank_csn 120R
+preplace inst genx_qspi_handler -pg 1 -lvl 8 -x 2250 -y 120 -swap {0 13 3 2 5 4 7 12 6 10 1 8 9 11} -defaultsOSRD -pinDir clk left -pinY clk 0L -pinDir resetn left -pinY resetn 260L -pinDir dbg_notify_write right -pinY dbg_notify_write 260R -pinDir dbg_notify_read right -pinY dbg_notify_read 0R -pinBusDir sck_counts left -pinBusY sck_counts 60L -pinBusDir opcode left -pinBusY opcode 40L -pinBusDir address left -pinBusY address 100L -pinBusDir chip_select left -pinBusY chip_select 200L -pinBusDir wdata_h left -pinBusY wdata_h 80L -pinBusDir wdata_l left -pinBusY wdata_l 160L -pinBusDir rdata_h left -pinBusY rdata_h 20L -pinBusDir rdata_l left -pinBusY rdata_l 120L -pinDir async_notify_read left -pinY async_notify_read 140L -pinDir async_notify_write left -pinY async_notify_write 180L
+preplace netloc axi_qspi_iface_0_qspi_req_out 1 4 1 N 300
+preplace netloc clk_in1_0_1 1 0 1 NJ 320
+preplace netloc ext_reset_in_0_1 1 0 1 NJ 340
+preplace netloc genx_qspi_handler_dbg_notify_read 1 8 1 N 120
+preplace netloc genx_qspi_handler_dbg_notify_write 1 7 2 N 440 2420
+preplace netloc genx_qspi_sim_address 1 7 2 2000 520 N
+preplace netloc genx_qspi_sim_chip_select 1 7 2 1980 500 N
+preplace netloc genx_qspi_sim_miso 1 5 2 NJ 220 1640
+preplace netloc genx_qspi_sim_notify_read 1 7 1 N 260
+preplace netloc genx_qspi_sim_notify_write 1 7 1 N 300
+preplace netloc genx_qspi_sim_opcode 1 7 2 2060 540 N
+preplace netloc genx_qspi_sim_sck_counts 1 7 2 2020 560 N
+preplace netloc genx_qspi_sim_wdata_h 1 7 2 2080 480 N
+preplace netloc genx_qspi_sim_wdata_l 1 7 2 2040 460 N
+preplace netloc qspi_manager_bank_csn 1 5 2 N 320 1580
+preplace netloc qspi_manager_host_csn 1 5 2 N 300 1620
+preplace netloc qspi_manager_mosi 1 5 2 N 280 1660
+preplace netloc qspi_manager_qspi_rsp_out 1 4 1 N 320
+preplace netloc qspi_manager_sck 1 5 2 N 260 1700
+preplace netloc source_100mhz_sys_clk 1 1 8 260 200 520 220 840 220 1160 400 1540 240 1600 80 2060 60 N
+preplace netloc source_100mhz_sys_resetn 1 1 7 280 350 540 240 820 240 1140 380 N 380 N 380 N
+preplace netloc genx_qspi_handler_rdata_l 1 7 1 NJ 240
+preplace netloc genx_qspi_handler_rdata_h 1 7 1 NJ 140
+preplace netloc qspi_manager_dbg_read_result 1 5 2 NJ 200 1680
+preplace netloc axi_uartlite_UART 1 0 2 NJ 260 NJ
+preplace netloc system_interconnect_M00_AXI 1 3 1 N 440
+preplace netloc system_interconnect_M01_AXI 1 3 1 N 300
+preplace netloc uart_axi_bridge_M_AXI 1 2 1 N 300
+levelinfo -pg 1 0 140 400 680 990 1350 1560 1840 2250 2520 2640 2660
+pagesize -pg 1 -db -bbox -sgen -150 0 2660 640
 ",
-   "No Loops_ScaleFactor":"0.577838",
-   "No Loops_TopLeft":"-142,-261",
+   "No Loops_ScaleFactor":"0.606709",
+   "No Loops_TopLeft":"-142,-252",
    "guistr":"# # String gsaved with Nlview 7.0r4  2019-12-20 bk=1.5203 VDI=41 GEI=36 GUI=JA:10.0 TLS
 #  -string -flagsOSRD
 preplace port port-id_CLK100MHZ -pg 1 -lvl 0 -x -10 -y -200 -defaultsOSRD

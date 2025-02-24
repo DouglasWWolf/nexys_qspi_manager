@@ -7,7 +7,8 @@
       "name": "top_level",
       "rev_ctrl_bd_flag": "RevCtrlBdOff",
       "synth_flow_mode": "Hierarchical",
-      "tool_version": "2021.1"
+      "tool_version": "2021.1",
+      "validated": "true"
     },
     "design_tree": {
       "source_100mhz": {
@@ -19,14 +20,13 @@
         "axi_uartlite": ""
       },
       "system_interconnect": "",
-      "system_ila_1": "",
       "axi_qspi_iface": "",
       "axi_revision": "",
       "system_ila_0": "",
       "system_ila_2": "",
-      "genx_qspi_handler": "",
+      "genx_qspi_sim": "",
       "qspi_manager": "",
-      "genx_qspi_sim": ""
+      "genx_qspi_handler": ""
     },
     "interface_ports": {
       "UART": {
@@ -38,11 +38,43 @@
     "ports": {
       "CLK100MHZ": {
         "type": "clk",
-        "direction": "I"
+        "direction": "I",
+        "parameters": {
+          "CLK_DOMAIN": {
+            "value": "top_level_CLK100MHZ",
+            "value_src": "default"
+          },
+          "FREQ_HZ": {
+            "value": "100000000",
+            "value_src": "default"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "default"
+          }
+        }
       },
       "CPU_RESETN": {
         "type": "rst",
-        "direction": "I"
+        "direction": "I",
+        "parameters": {
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "POLARITY": {
+            "value": "ACTIVE_LOW",
+            "value_src": "default"
+          }
+        }
       }
     },
     "components": {
@@ -762,23 +794,6 @@
           }
         }
       },
-      "system_ila_1": {
-        "vlnv": "xilinx.com:ip:system_ila:1.1",
-        "xci_name": "top_level_system_ila_1_0",
-        "xci_path": "ip/top_level_system_ila_1_0/top_level_system_ila_1_0.xci",
-        "inst_hier_path": "system_ila_1",
-        "parameters": {
-          "C_MON_TYPE": {
-            "value": "NATIVE"
-          },
-          "C_NUM_OF_PROBES": {
-            "value": "7"
-          },
-          "C_PROBE7_TYPE": {
-            "value": "0"
-          }
-        }
-      },
       "axi_qspi_iface": {
         "vlnv": "xilinx.com:module_ref:axi_qspi_iface:1.0",
         "xci_name": "top_level_axi_qspi_iface_0_0",
@@ -1331,7 +1346,7 @@
             "value": "NATIVE"
           },
           "C_NUM_OF_PROBES": {
-            "value": "5"
+            "value": "8"
           }
         }
       },
@@ -1345,7 +1360,164 @@
             "value": "NATIVE"
           },
           "C_NUM_OF_PROBES": {
-            "value": "6"
+            "value": "8"
+          }
+        }
+      },
+      "genx_qspi_sim": {
+        "vlnv": "xilinx.com:module_ref:genx_qspi_sim:1.0",
+        "xci_name": "top_level_genx_qspi_sim_0_0",
+        "xci_path": "ip/top_level_genx_qspi_sim_0_0/top_level_genx_qspi_sim_0_0.xci",
+        "inst_hier_path": "genx_qspi_sim",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "genx_qspi_sim",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "sck": {
+            "direction": "I"
+          },
+          "mosi": {
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "miso": {
+            "direction": "O",
+            "left": "3",
+            "right": "0"
+          },
+          "host_csn": {
+            "direction": "I"
+          },
+          "bank_csn": {
+            "direction": "I"
+          },
+          "sck_counts": {
+            "direction": "O",
+            "left": "9",
+            "right": "0"
+          },
+          "opcode": {
+            "direction": "O",
+            "left": "7",
+            "right": "0"
+          },
+          "address": {
+            "direction": "O",
+            "left": "31",
+            "right": "0"
+          },
+          "chip_select": {
+            "direction": "O",
+            "left": "1",
+            "right": "0"
+          },
+          "wdata_h": {
+            "direction": "O",
+            "left": "255",
+            "right": "0"
+          },
+          "wdata_l": {
+            "direction": "O",
+            "left": "255",
+            "right": "0"
+          },
+          "rdata_h": {
+            "direction": "I",
+            "left": "255",
+            "right": "0"
+          },
+          "rdata_l": {
+            "direction": "I",
+            "left": "255",
+            "right": "0"
+          },
+          "notify_read": {
+            "direction": "O"
+          },
+          "notify_write": {
+            "direction": "O"
+          }
+        }
+      },
+      "qspi_manager": {
+        "vlnv": "xilinx.com:module_ref:qspi_manager:1.0",
+        "xci_name": "top_level_qspi_manager_0_0",
+        "xci_path": "ip/top_level_qspi_manager_0_0/top_level_qspi_manager_0_0.xci",
+        "inst_hier_path": "qspi_manager",
+        "reference_info": {
+          "ref_type": "hdl",
+          "ref_name": "qspi_manager",
+          "boundary_crc": "0x0"
+        },
+        "ports": {
+          "dbg_read_result": {
+            "direction": "O",
+            "left": "63",
+            "right": "0"
+          },
+          "clk": {
+            "type": "clk",
+            "direction": "I",
+            "parameters": {
+              "ASSOCIATED_RESET": {
+                "value": "resetn",
+                "value_src": "constant"
+              },
+              "FREQ_HZ": {
+                "value": "100000000",
+                "value_src": "ip_prop"
+              },
+              "PHASE": {
+                "value": "0.0",
+                "value_src": "ip_prop"
+              },
+              "CLK_DOMAIN": {
+                "value": "/source_100mhz/system_clock_clk_out1",
+                "value_src": "ip_prop"
+              }
+            }
+          },
+          "resetn": {
+            "type": "rst",
+            "direction": "I",
+            "parameters": {
+              "POLARITY": {
+                "value": "ACTIVE_LOW",
+                "value_src": "constant"
+              }
+            }
+          },
+          "qspi_req_in": {
+            "direction": "I",
+            "left": "110",
+            "right": "0"
+          },
+          "qspi_rsp_out": {
+            "direction": "O",
+            "left": "67",
+            "right": "0"
+          },
+          "mosi": {
+            "direction": "O",
+            "left": "3",
+            "right": "0"
+          },
+          "miso": {
+            "direction": "I",
+            "left": "3",
+            "right": "0"
+          },
+          "sck": {
+            "direction": "O"
+          },
+          "host_csn": {
+            "direction": "O"
+          },
+          "bank_csn": {
+            "direction": "O"
           }
         }
       },
@@ -1418,178 +1590,31 @@
             "left": "1",
             "right": "0"
           },
+          "wdata_h": {
+            "direction": "I",
+            "left": "255",
+            "right": "0"
+          },
+          "wdata_l": {
+            "direction": "I",
+            "left": "255",
+            "right": "0"
+          },
+          "rdata_h": {
+            "direction": "O",
+            "left": "255",
+            "right": "0"
+          },
+          "rdata_l": {
+            "direction": "O",
+            "left": "255",
+            "right": "0"
+          },
           "async_notify_read": {
             "direction": "I"
           },
           "async_notify_write": {
             "direction": "I"
-          }
-        }
-      },
-      "qspi_manager": {
-        "vlnv": "xilinx.com:module_ref:qspi_manager:1.0",
-        "xci_name": "top_level_qspi_manager_0_0",
-        "xci_path": "ip/top_level_qspi_manager_0_0/top_level_qspi_manager_0_0.xci",
-        "inst_hier_path": "qspi_manager",
-        "reference_info": {
-          "ref_type": "hdl",
-          "ref_name": "qspi_manager",
-          "boundary_crc": "0x0"
-        },
-        "ports": {
-          "clk": {
-            "type": "clk",
-            "direction": "I",
-            "parameters": {
-              "ASSOCIATED_RESET": {
-                "value": "resetn",
-                "value_src": "constant"
-              },
-              "FREQ_HZ": {
-                "value": "100000000",
-                "value_src": "ip_prop"
-              },
-              "PHASE": {
-                "value": "0.0",
-                "value_src": "ip_prop"
-              },
-              "CLK_DOMAIN": {
-                "value": "/source_100mhz/system_clock_clk_out1",
-                "value_src": "ip_prop"
-              }
-            }
-          },
-          "resetn": {
-            "type": "rst",
-            "direction": "I",
-            "parameters": {
-              "POLARITY": {
-                "value": "ACTIVE_LOW",
-                "value_src": "constant"
-              }
-            }
-          },
-          "dbg_qspi_cmd": {
-            "direction": "O",
-            "left": "3",
-            "right": "0"
-          },
-          "dbg_qspi_bankmap": {
-            "direction": "O",
-            "left": "9",
-            "right": "0"
-          },
-          "dbg_qspi_addr": {
-            "direction": "O",
-            "left": "31",
-            "right": "0"
-          },
-          "dbg_qspi_wdata": {
-            "direction": "O",
-            "left": "63",
-            "right": "0"
-          },
-          "dbg_qspi_start": {
-            "direction": "O",
-            "left": "0",
-            "right": "0"
-          },
-          "dbg_qspi_rdata": {
-            "direction": "O",
-            "left": "63",
-            "right": "0"
-          },
-          "dbg_qspi_idle": {
-            "direction": "O",
-            "left": "0",
-            "right": "0"
-          },
-          "qspi_req_in": {
-            "direction": "I",
-            "left": "110",
-            "right": "0"
-          },
-          "qspi_rsp_out": {
-            "direction": "O",
-            "left": "67",
-            "right": "0"
-          },
-          "mosi": {
-            "direction": "O",
-            "left": "3",
-            "right": "0"
-          },
-          "miso": {
-            "direction": "I",
-            "left": "3",
-            "right": "0"
-          },
-          "sck": {
-            "direction": "O"
-          },
-          "host_csn": {
-            "direction": "O"
-          },
-          "bank_csn": {
-            "direction": "O"
-          }
-        }
-      },
-      "genx_qspi_sim": {
-        "vlnv": "xilinx.com:module_ref:genx_qspi_sim:1.0",
-        "xci_name": "top_level_genx_qspi_sim_0_0",
-        "xci_path": "ip/top_level_genx_qspi_sim_0_0/top_level_genx_qspi_sim_0_0.xci",
-        "inst_hier_path": "genx_qspi_sim",
-        "reference_info": {
-          "ref_type": "hdl",
-          "ref_name": "genx_qspi_sim",
-          "boundary_crc": "0x0"
-        },
-        "ports": {
-          "sck": {
-            "direction": "I"
-          },
-          "mosi": {
-            "direction": "I",
-            "left": "3",
-            "right": "0"
-          },
-          "miso": {
-            "direction": "O",
-            "left": "3",
-            "right": "0"
-          },
-          "host_csn": {
-            "direction": "I"
-          },
-          "bank_csn": {
-            "direction": "I"
-          },
-          "sck_counts": {
-            "direction": "O",
-            "left": "9",
-            "right": "0"
-          },
-          "opcode": {
-            "direction": "O",
-            "left": "7",
-            "right": "0"
-          },
-          "address": {
-            "direction": "O",
-            "left": "31",
-            "right": "0"
-          },
-          "chip_select": {
-            "direction": "O",
-            "left": "1",
-            "right": "0"
-          },
-          "notify_read": {
-            "direction": "O"
-          },
-          "notify_write": {
-            "direction": "O"
           }
         }
       }
@@ -1648,21 +1673,34 @@
       "genx_qspi_handler_dbg_notify_write": {
         "ports": [
           "genx_qspi_handler/dbg_notify_write",
-          "system_ila_2/probe1"
+          "system_ila_2/probe1",
+          "system_ila_0/probe7"
+        ]
+      },
+      "genx_qspi_handler_rdata_h": {
+        "ports": [
+          "genx_qspi_handler/rdata_h",
+          "genx_qspi_sim/rdata_h"
+        ]
+      },
+      "genx_qspi_handler_rdata_l": {
+        "ports": [
+          "genx_qspi_handler/rdata_l",
+          "genx_qspi_sim/rdata_l"
         ]
       },
       "genx_qspi_sim_address": {
         "ports": [
           "genx_qspi_sim/address",
-          "genx_qspi_handler/address",
-          "system_ila_2/probe4"
+          "system_ila_2/probe4",
+          "genx_qspi_handler/address"
         ]
       },
       "genx_qspi_sim_chip_select": {
         "ports": [
           "genx_qspi_sim/chip_select",
-          "genx_qspi_handler/chip_select",
-          "system_ila_2/probe5"
+          "system_ila_2/probe5",
+          "genx_qspi_handler/chip_select"
         ]
       },
       "genx_qspi_sim_miso": {
@@ -1687,15 +1725,29 @@
       "genx_qspi_sim_opcode": {
         "ports": [
           "genx_qspi_sim/opcode",
-          "genx_qspi_handler/opcode",
-          "system_ila_2/probe3"
+          "system_ila_2/probe3",
+          "genx_qspi_handler/opcode"
         ]
       },
       "genx_qspi_sim_sck_counts": {
         "ports": [
           "genx_qspi_sim/sck_counts",
-          "genx_qspi_handler/sck_counts",
-          "system_ila_2/probe2"
+          "system_ila_2/probe2",
+          "genx_qspi_handler/sck_counts"
+        ]
+      },
+      "genx_qspi_sim_wdata_h": {
+        "ports": [
+          "genx_qspi_sim/wdata_h",
+          "system_ila_2/probe6",
+          "genx_qspi_handler/wdata_h"
+        ]
+      },
+      "genx_qspi_sim_wdata_l": {
+        "ports": [
+          "genx_qspi_sim/wdata_l",
+          "system_ila_2/probe7",
+          "genx_qspi_handler/wdata_l"
         ]
       },
       "qspi_manager_bank_csn": {
@@ -1705,46 +1757,10 @@
           "genx_qspi_sim/bank_csn"
         ]
       },
-      "qspi_manager_dbg_qspi_addr": {
+      "qspi_manager_dbg_read_result": {
         "ports": [
-          "qspi_manager/dbg_qspi_addr",
-          "system_ila_1/probe2"
-        ]
-      },
-      "qspi_manager_dbg_qspi_bankmap": {
-        "ports": [
-          "qspi_manager/dbg_qspi_bankmap",
-          "system_ila_1/probe1"
-        ]
-      },
-      "qspi_manager_dbg_qspi_cmd": {
-        "ports": [
-          "qspi_manager/dbg_qspi_cmd",
-          "system_ila_1/probe0"
-        ]
-      },
-      "qspi_manager_dbg_qspi_idle": {
-        "ports": [
-          "qspi_manager/dbg_qspi_idle",
-          "system_ila_1/probe6"
-        ]
-      },
-      "qspi_manager_dbg_qspi_rdata": {
-        "ports": [
-          "qspi_manager/dbg_qspi_rdata",
-          "system_ila_1/probe5"
-        ]
-      },
-      "qspi_manager_dbg_qspi_start": {
-        "ports": [
-          "qspi_manager/dbg_qspi_start",
-          "system_ila_1/probe4"
-        ]
-      },
-      "qspi_manager_dbg_qspi_wdata": {
-        "ports": [
-          "qspi_manager/dbg_qspi_wdata",
-          "system_ila_1/probe3"
+          "qspi_manager/dbg_read_result",
+          "system_ila_0/probe5"
         ]
       },
       "qspi_manager_host_csn": {
@@ -1779,13 +1795,12 @@
           "source_100mhz/sys_clk",
           "uart_axi_bridge/s_axi_aclk",
           "system_interconnect/aclk",
-          "system_ila_1/clk",
           "axi_qspi_iface/clk",
           "axi_revision/AXI_ACLK",
           "system_ila_0/clk",
           "system_ila_2/clk",
-          "genx_qspi_handler/clk",
-          "qspi_manager/clk"
+          "qspi_manager/clk",
+          "genx_qspi_handler/clk"
         ]
       },
       "source_100mhz_sys_resetn": {
@@ -1795,8 +1810,8 @@
           "system_interconnect/aresetn",
           "axi_qspi_iface/resetn",
           "axi_revision/AXI_ARESETN",
-          "genx_qspi_handler/resetn",
-          "qspi_manager/resetn"
+          "qspi_manager/resetn",
+          "genx_qspi_handler/resetn"
         ]
       }
     },

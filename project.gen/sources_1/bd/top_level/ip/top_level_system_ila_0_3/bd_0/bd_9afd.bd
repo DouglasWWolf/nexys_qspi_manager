@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x33D5585E8A13B4D4",
+      "boundary_crc": "0xBE4161667364B74A",
       "design_src": "SBD",
       "device": "xc7a100tcsg324-1",
       "name": "bd_9afd",
@@ -65,6 +65,21 @@
         "direction": "I",
         "left": "0",
         "right": "0"
+      },
+      "probe5": {
+        "direction": "I",
+        "left": "63",
+        "right": "0"
+      },
+      "probe6": {
+        "direction": "I",
+        "left": "31",
+        "right": "0"
+      },
+      "probe7": {
+        "direction": "I",
+        "left": "0",
+        "right": "0"
       }
     },
     "components": {
@@ -102,7 +117,7 @@
             "value": "Native"
           },
           "C_NUM_OF_PROBES": {
-            "value": "5"
+            "value": "8"
           },
           "C_PROBE0_MU_CNT": {
             "value": "1"
@@ -147,6 +162,33 @@
             "value": "0"
           },
           "C_PROBE4_WIDTH": {
+            "value": "1"
+          },
+          "C_PROBE5_MU_CNT": {
+            "value": "1"
+          },
+          "C_PROBE5_TYPE": {
+            "value": "0"
+          },
+          "C_PROBE5_WIDTH": {
+            "value": "64"
+          },
+          "C_PROBE6_MU_CNT": {
+            "value": "1"
+          },
+          "C_PROBE6_TYPE": {
+            "value": "0"
+          },
+          "C_PROBE6_WIDTH": {
+            "value": "1"
+          },
+          "C_PROBE7_MU_CNT": {
+            "value": "1"
+          },
+          "C_PROBE7_TYPE": {
+            "value": "0"
+          },
+          "C_PROBE7_WIDTH": {
             "value": "1"
           },
           "C_TIME_TAG_WIDTH": {
@@ -199,6 +241,24 @@
         "ports": [
           "probe4",
           "ila_lib/probe4"
+        ]
+      },
+      "probe5_1": {
+        "ports": [
+          "probe5",
+          "ila_lib/probe5"
+        ]
+      },
+      "probe6_1": {
+        "ports": [
+          "probe6",
+          "ila_lib/probe6"
+        ]
+      },
+      "probe7_1": {
+        "ports": [
+          "probe7",
+          "ila_lib/probe7"
         ]
       }
     }

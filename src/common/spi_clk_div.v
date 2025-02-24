@@ -20,9 +20,6 @@ module spi_clk_div #
     // The divided down clock signal
     output  clkout,
 
-    // The divided down clock signal *not* gated clken
-    output  raw_clkout,
-
     // Enables or disables the clkout signal
     input   clken,
 
@@ -103,9 +100,6 @@ end
 
 // clkout is the state of our state machine, gated by clken
 assign clkout = fsm_state & clken;
-
-// raw_clkout is not gated by clken.  
-assign raw_clkout = fsm_state;
 
 // The "cycle_count" port is gated by clken
 assign cycle_count = (clken) ? cycle_count_reg : 0;

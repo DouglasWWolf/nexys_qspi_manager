@@ -1,26 +1,52 @@
+//=============================================================================
+// Module: genx_qspi_handler
+//
+// Handles read and write requests that were received from simulated QSPI
+//
+// Date         Who  What
+//-----------------------------------------------------------------------------
+// 23-Feb-2025  DWW  Initial Creation
+//=============================================================================
 
-
-module genx_qspi_handler # (DW = 256)
+module genx_qspi_handler 
 (
+
     input   clk, resetn,
 
     // These go high for one cycle to serve as ILA triggers
     output       dbg_notify_write,
     output       dbg_notify_read,  
 
-    input [ 9:0] sck_counts,         // Count of the rising edges of SCK
-    input [ 7:0] opcode,             // Opcode that arrived on MOSI
-    input [31:0] address,            // Address that arrived on MOSI
-    input [ 1:0] chip_select,        // Which chip-selects are active?
+    input      [  9:0] sck_counts,   // Count of the rising edges of SCK
+    input      [  7:0] opcode,       // Opcode that arrived on MOSI
+    input      [ 31:0] address,      // Address that arrived on MOSI
+    input      [  1:0] chip_select,  // Which chip-selects are active?   
+    input      [255:0] wdata_h,      // Data to be written to a register or SMEM
+    input      [255:0] wdata_l,      // Data to be written to a register or SMEM
+    output reg [255:0] rdata_h,      // Data read from registers or SMEM
+    output reg [255:0] rdata_l,      // Data read from registers or SMEM
 
-    input        async_notify_read,  // Rising edge = chip_select, address, and opcode
-                                     // have arrived
+    input        async_notify_read,   // Rising edge = chip_select, address, and opcode
+                                      // have arrived
 
-    input        async_notify_write  // Chip-select has de-asserted
+    input        async_notify_write   // Chip-select has de-asserted
 );
 
-// These are synchronous versions of the async input ports
+// There are 8 32-bit words in wdata_h, wdata_l, rdata_h, and rdata_l
+localparam DW = 8;
+
+// Bring in the QSPI opcodes
+`include "../includes/genx_qspi_opcodes.vh"
+
+// Definitions of the valid chip-select statess
+localparam CS_HOST = 2'b10;
+localparam CS_BANK = 2'b01;
+
+// These are synchronous versions of the async input portss
 wire notify_read, notify_write;
+
+// This is data that's being read from the "host" register
+wire[31:0] host_rdata;
 
 //=============================================================================
 // Keep track of the prior state of the "notify signals" and use those states
@@ -69,5 +95,44 @@ assign dbg_notify_write = notify_write_rising;
 assign dbg_notify_read  = notify_read_rising;
 //=============================================================================
 
+
+
+
+
+always @(posedge clk) begin
+
+    rdata_h <= 0;
+    rdata_l <= 0;
+
+    if (chip_select == CS_HOST) begin
+        if (opcode == GENX_QSPI_OPCODE_READ_SINGLE) begin
+            rdata_h <= {(host_rdata[31:0]), {DW-1{32'b0}}};
+        end
+    end
+
+end
+
+
+
+// This will strobe high when it's time to write to "host" register
+wire write_host_reg = notify_write_rising
+                    & (chip_select == CS_HOST)
+                    & (opcode      == GENX_QSPI_OPCODE_WRITE_SINGLE);
+
+
+//=============================================================================
+// This is a simulator for the GenX "host" registers
+//=============================================================================
+gxsim_host_reg host_registers
+(
+    .clk            (clk),
+    .resetn         (resetn),
+    .address        (address),
+    .wdata          (wdata_h[255 -: 32]),
+    .write_strobe   (write_host_reg),
+    .rdata          (host_rdata),
+    .bank_select    ()
+);
+//=============================================================================
 
 endmodule

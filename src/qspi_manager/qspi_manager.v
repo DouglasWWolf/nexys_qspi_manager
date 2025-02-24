@@ -13,10 +13,7 @@
 //=======================================================================================
 
 // We want the QSPI interface signals broken out for debug
-`define ADD_DEBUG_PORTS
-
-// We want to use simulated input data on the miso pins
-`define SIM_MISO
+//`define ADD_DEBUG_PORTS
 
 // Tell "qspi_fields.vh" that we are a receiver of QSPI requests
 `define QSPI_FRONT_END
@@ -30,8 +27,10 @@ module qspi_manager #
     parameter QSPI_FREQ =  25000000    
 )  
 (
-    input clk, resetn,
+    output[63:0] dbg_read_result,
 
+    input clk, resetn,
+    
     // Broken out fields for debugging
     `ifdef ADD_DEBUG_PORTS
         output [    `QSPI_CMD_LEN-1:0] dbg_qspi_cmd,  
@@ -79,9 +78,8 @@ clock_divider
 (
     .clkin        (clk),
     .clkout       (sck),    
-    .raw_clkout   (),
     .clken        (sck_enable),
-    .rising_edge  (),
+    .rising_edge  (sck_rising_edge),
     .falling_edge (sck_falling_edge),
     .cycle_count  (sck_cycles)
 );
@@ -92,6 +90,9 @@ localparam QSPI_BANK_EN_REG = 32'h28;
 
 // SMEM starts at this address in all banks
 localparam FIRST_SMEM_ADDR  = 32'h10_0000;
+
+// Bring in the QSPI opcodes (read-single, write-burst, etc)
+`include "genx_qspi_opcodes.vh"
 
 // Bring in qspi fields that we will break out from qspi_req_in and qspi_rsp_out
 `include "qspi_fields.vh"
@@ -169,7 +170,7 @@ end
 
 
 //=============================================================================
-// Define the clock-cycles required to carry out each type of QSPI transaction
+// Compute the clock-cycles required to carry out each type of QSPI transaction
 //=============================================================================
 localparam QSPI_OPCODE_CLKS =  8; // 8 clocks to clock out the QSPI command
 localparam QSPI_ADDR_CLKS   =  8; // 8 clocks to clock out the R/W address
@@ -323,49 +324,18 @@ end
 
 
 //=============================================================================
-// These are the opcodes that the GenX QSPI receiver understands
-//=============================================================================
-localparam[7:0] OPCODE_READ_SINGLE  = 8'hE8;
-localparam[7:0] OPCODE_WRITE_SINGLE = 8'hE9;
-localparam[7:0] OPCODE_READ_BURST   = 8'hEA;
-localparam[7:0] OPCODE_WRITE_BURST  = 8'hEB;
-//=============================================================================
-
-
-
-//=============================================================================
 // This block clocks data from the QSPI's miso pins into "read_result"
 //=============================================================================
-reg[3:0] flip_flop;
-
 always @(posedge clk) begin
     
-    if (resetn == 0) begin
+    if (resetn == 0) 
         read_result <= 0;
-    end
 
-
-    else if (tx_start) begin
-        if      (qspi_cmd == QSPI_CMD_RD_HREG && qspi_addr == 0)
-            flip_flop <= 4'b0001;
-        else if (qspi_cmd == QSPI_CMD_RD_HREG && qspi_addr == 4)
-            flip_flop <= 4'b0010;
-        else if (qspi_cmd == QSPI_CMD_RD_BREG && qspi_addr == 0)
-            flip_flop <= 4'b0100;
-        else if (qspi_cmd == QSPI_CMD_RD_BREG && qspi_addr == 4)
-            flip_flop <= 4'b1000;
-        else 
-            flip_flop <= 0;
-    end
-
+    else if (qsm_state == QSM_IDLE)
+        read_result <= 0;
 
     else if (sck_rising_edge) begin
-        `ifdef SIM_MISO
-            read_result <= (read_result << 4) | flip_flop;        
-            if (flip_flop) flip_flop   <= ~flip_flop;
-        `else
-            read_result <= (read_result << 4) | miso;
-        `endif
+        read_result <= (read_result << 4) | miso;
     end
 
 end
@@ -499,7 +469,7 @@ always @(posedge clk) begin
             begin
                 `CLEAR_TX_WDATA;
                 tx_cs          <= CS_HOST;
-                tx_opcode      <= make_opcode(OPCODE_WRITE_SINGLE);
+                tx_opcode      <= make_opcode(GENX_QSPI_OPCODE_WRITE_SINGLE);
                 tx_address     <= swap_endian(QSPI_BANK_EN_REG);
                 tx_wdata[0]    <= swap_endian(qspi_bankmap);
                 tx_cycle_count <= QSPI_WREG_CLKS;
@@ -512,7 +482,7 @@ always @(posedge clk) begin
             begin 
                 `CLEAR_TX_WDATA;
                 tx_cs          <= CS_HOST;
-                tx_opcode      <= make_opcode(OPCODE_WRITE_SINGLE);
+                tx_opcode      <= make_opcode(GENX_QSPI_OPCODE_WRITE_SINGLE);
                 tx_address     <= swap_endian(qspi_addr);
                 tx_wdata[0]    <= swap_endian(qspi_wdata[31:0]);
                 tx_cycle_count <= QSPI_WREG_CLKS;
@@ -525,7 +495,7 @@ always @(posedge clk) begin
             begin
                 `CLEAR_TX_WDATA;
                 tx_cs          <= CS_HOST;
-                tx_opcode      <= make_opcode(OPCODE_READ_SINGLE);
+                tx_opcode      <= make_opcode(GENX_QSPI_OPCODE_READ_SINGLE);
                 tx_address     <= swap_endian(qspi_addr);
                 tx_cycle_count <= QSPI_RREG_CLKS;
                 tx_start       <= 1;
@@ -537,7 +507,7 @@ always @(posedge clk) begin
             if (tx_idle) begin
                 `CLEAR_TX_WDATA;
                 tx_cs          <= CS_BANK;
-                tx_opcode      <= make_opcode(OPCODE_WRITE_SINGLE);
+                tx_opcode      <= make_opcode(GENX_QSPI_OPCODE_WRITE_SINGLE);
                 tx_address     <= swap_endian(qspi_addr);
                 tx_wdata[0]    <= swap_endian(qspi_wdata[31:0]);
                 tx_cycle_count <= QSPI_WREG_CLKS;
@@ -550,7 +520,7 @@ always @(posedge clk) begin
             if (tx_idle) begin
                 `CLEAR_TX_WDATA;
                 tx_cs          <= CS_BANK;
-                tx_opcode      <= make_opcode(OPCODE_READ_SINGLE);
+                tx_opcode      <= make_opcode(GENX_QSPI_OPCODE_READ_SINGLE);
                 tx_address     <= swap_endian(qspi_addr);
                 tx_cycle_count <= QSPI_RREG_CLKS;
                 tx_start       <= 1;
@@ -562,7 +532,7 @@ always @(posedge clk) begin
             if (tx_idle) begin
                 `CLEAR_TX_WDATA;
                 tx_cs          <= CS_BANK;
-                tx_opcode      <= make_opcode(OPCODE_WRITE_BURST);
+                tx_opcode      <= make_opcode(GENX_QSPI_OPCODE_WRITE_BURST);
                 tx_address     <= swap_endian(qspi_addr);
                 tx_wdata[0]    <= swap_endian(qspi_wdata[1*32 +: 32]);
                 tx_wdata[1]    <= swap_endian(qspi_wdata[0*32 +: 32]);
@@ -577,7 +547,7 @@ always @(posedge clk) begin
             if (tx_idle) begin 
                 `CLEAR_TX_WDATA;
                 tx_cs          <= CS_BANK;
-                tx_opcode      <= make_opcode(OPCODE_READ_SINGLE);
+                tx_opcode      <= make_opcode(GENX_QSPI_OPCODE_READ_SINGLE);
                 tx_address     <= swap_endian(qspi_addr);
                 tx_cycle_count <= QSPI_RREG_CLKS;
                 tx_start       <= 1;
@@ -590,7 +560,7 @@ always @(posedge clk) begin
             if (tx_idle) begin
                 `CLEAR_TX_WDATA;
                 tx_cs          <= CS_BANK;
-                tx_opcode      <= make_opcode(OPCODE_READ_BURST);
+                tx_opcode      <= make_opcode(GENX_QSPI_OPCODE_READ_BURST);
                 tx_address     <= swap_endian(qspi_addr);
                 tx_cycle_count <= QSPI_RMEM_CLKS;
                 tx_start       <= 1;
@@ -600,7 +570,11 @@ always @(posedge clk) begin
         // Wait for the most recent QSPI transaction to finish
         FSM_CMD_END:
             if (tx_idle) begin
-                qspi_rdata <= read_result[63:0];
+                qspi_rdata <=
+                {
+                    swap_endian(read_result[63:32]),                    
+                    swap_endian(read_result[31:00])                    
+                };
                 fsm_state  <= FSM_IDLE;
             end
 
@@ -633,4 +607,5 @@ end
 `endif
 //=============================================================================
 
+assign dbg_read_result = read_result;
 endmodule

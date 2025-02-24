@@ -13,7 +13,9 @@ module bd_5b1c_wrapper
     probe2,
     probe3,
     probe4,
-    probe5);
+    probe5,
+    probe6,
+    probe7);
   input clk;
   input [0:0]probe0;
   input [0:0]probe1;
@@ -21,6 +23,8 @@ module bd_5b1c_wrapper
   input [7:0]probe3;
   input [31:0]probe4;
   input [1:0]probe5;
+  input [255:0]probe6;
+  input [255:0]probe7;
 
   wire clk;
   wire [0:0]probe0;
@@ -29,6 +33,8 @@ module bd_5b1c_wrapper
   wire [7:0]probe3;
   wire [31:0]probe4;
   wire [1:0]probe5;
+  wire [255:0]probe6;
+  wire [255:0]probe7;
 
   bd_5b1c bd_5b1c_i
        (.clk(clk),
@@ -37,5 +43,7 @@ module bd_5b1c_wrapper
         .probe2(probe2),
         .probe3(probe3),
         .probe4(probe4),
-        .probe5(probe5));
+        .probe5(probe5),
+        .probe6(probe6),
+        .probe7(probe7));
 endmodule
