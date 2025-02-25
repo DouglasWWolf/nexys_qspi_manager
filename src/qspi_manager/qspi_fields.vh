@@ -19,7 +19,7 @@ localparam QSPI_ERROR_LEN   = `QSPI_ERROR_LEN  ;
 /*
 ****************************************************************************
   This block of code checks to see if `QSPI_REQ_WIDTH and `QSPI_RSP_WIDTH 
-  computed correctly in file "qspi_field_widths.vh"
+  are computed correctly in file "qspi_field_widths.vh"
 
   If this gets to be a hassle to maintain, this entire block can be deleted
   and the only side-effect will be that RTL engineers had better be able to

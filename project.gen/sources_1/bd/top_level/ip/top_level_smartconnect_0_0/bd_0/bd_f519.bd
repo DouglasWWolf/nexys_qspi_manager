@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x9B6C690053D4ECEC",
+      "boundary_crc": "0x9B6C690052876A47",
       "design_src": "SBD",
       "device": "xc7a100tcsg324-1",
       "name": "bd_f519",
@@ -94,7 +94,7 @@
             "value_src": "const_prop"
           },
           "CLK_DOMAIN": {
-            "value": "/source_100mhz/system_clock_clk_out1",
+            "value": "/source_100mhz/clock_50mhz_clk_out1",
             "value_src": "ip_prop"
           },
           "DATA_WIDTH": {
@@ -102,7 +102,7 @@
             "value_src": "const_prop"
           },
           "FREQ_HZ": {
-            "value": "100000000",
+            "value": "50000000",
             "value_src": "ip_prop"
           },
           "HAS_BRESP": {
@@ -229,7 +229,7 @@
             "value_src": "default"
           },
           "CLK_DOMAIN": {
-            "value": "/source_100mhz/system_clock_clk_out1",
+            "value": "/source_100mhz/clock_50mhz_clk_out1",
             "value_src": "ip_prop"
           },
           "DATA_WIDTH": {
@@ -237,7 +237,7 @@
             "value_src": "default"
           },
           "FREQ_HZ": {
-            "value": "100000000",
+            "value": "50000000",
             "value_src": "ip_prop"
           },
           "HAS_BRESP": {
@@ -355,7 +355,7 @@
             "value_src": "default"
           },
           "CLK_DOMAIN": {
-            "value": "/source_100mhz/system_clock_clk_out1",
+            "value": "/source_100mhz/clock_50mhz_clk_out1",
             "value_src": "ip_prop"
           },
           "DATA_WIDTH": {
@@ -363,7 +363,7 @@
             "value_src": "default"
           },
           "FREQ_HZ": {
-            "value": "100000000",
+            "value": "50000000",
             "value_src": "ip_prop"
           },
           "HAS_BRESP": {
@@ -473,11 +473,11 @@
             "value_src": "constant"
           },
           "CLK_DOMAIN": {
-            "value": "/source_100mhz/system_clock_clk_out1",
+            "value": "/source_100mhz/clock_50mhz_clk_out1",
             "value_src": "ip_prop"
           },
           "FREQ_HZ": {
-            "value": "100000000",
+            "value": "50000000",
             "value_src": "ip_prop"
           },
           "FREQ_TOLERANCE_HZ": {

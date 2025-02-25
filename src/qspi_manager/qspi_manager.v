@@ -1,3 +1,14 @@
+//=============================================================================
+// Module: gxsim_host_reg
+//
+// Simulates the GenX host-registers
+//
+// Date         Who  What
+//-----------------------------------------------------------------------------
+// 23-Feb-2025  DWW  Initial Creation
+//=============================================================================
+`include "../includes/sys_defines.vh"
+
 
 //=======================================================================================
 // This module manages QSPI transactions.
@@ -12,6 +23,7 @@
 //
 //=======================================================================================
 
+
 // We want the QSPI interface signals broken out for debug
 //`define ADD_DEBUG_PORTS
 
@@ -23,12 +35,10 @@
 
 module qspi_manager #
 (
-    parameter FREQ_HZ   = 100000000, 
-    parameter QSPI_FREQ =  25000000    
+    parameter FREQ_HZ   = `SYSCLK_FREQ, 
+    parameter QSPI_FREQ = `GENX_QSPI_FREQ    
 )  
 (
-    output[63:0] dbg_read_result,
-
     input clk, resetn,
     
     // Broken out fields for debugging
@@ -58,6 +68,12 @@ module qspi_manager #
 
 );
 
+// Bring in the system-wide localparams
+`include "../includes/sys_params.vh"
+
+// Bring in qspi fields that we will break out from qspi_req_in and qspi_rsp_out
+`include "qspi_fields.vh"
+
 integer i;
 
 //=============================================================================
@@ -85,17 +101,6 @@ clock_divider
 );
 //=============================================================================
 
-// A GenX "host register" that allows us to select 1 or more banks
-localparam QSPI_BANK_EN_REG = 32'h28;
-
-// SMEM starts at this address in all banks
-localparam FIRST_SMEM_ADDR  = 32'h10_0000;
-
-// Bring in the QSPI opcodes (read-single, write-burst, etc)
-`include "genx_qspi_opcodes.vh"
-
-// Bring in qspi fields that we will break out from qspi_req_in and qspi_rsp_out
-`include "qspi_fields.vh"
 
 // Break out qspi_req_in and qspi_rsp_out into individual fields
 assign `QSPI_REQ_FIELDS = qspi_req_in;
@@ -389,7 +394,7 @@ always @(posedge clk) begin
 
                     // Write to host register
                     QSPI_CMD_WR_HREG: 
-                        if (qspi_addr >= FIRST_SMEM_ADDR)
+                        if (qspi_addr >= SMEM_BASE_ADDR)
                             qspi_error <= ERROR_ADDRESS;
                         else if (qspi_addr & 3)
                             qspi_error <= ERROR_UNALIGNED;
@@ -398,7 +403,7 @@ always @(posedge clk) begin
                     
                     // Read host register
                     QSPI_CMD_RD_HREG: 
-                        if (qspi_addr >= FIRST_SMEM_ADDR)
+                        if (qspi_addr >= SMEM_BASE_ADDR)
                             qspi_error <= ERROR_ADDRESS;
                         else if (qspi_addr & 3)
                             qspi_error <= ERROR_UNALIGNED;
@@ -409,7 +414,7 @@ always @(posedge clk) begin
                     QSPI_CMD_WR_BREG:
                         if (bank_count == 0)
                             qspi_error <= ERROR_BANKSEL;
-                        else if (qspi_addr >= FIRST_SMEM_ADDR)
+                        else if (qspi_addr >= SMEM_BASE_ADDR)
                             qspi_error <= ERROR_ADDRESS;
                         else if (qspi_addr & 3)
                             qspi_error <= ERROR_UNALIGNED;
@@ -422,7 +427,7 @@ always @(posedge clk) begin
                     QSPI_CMD_RD_BREG:
                         if (bank_count != 1)
                             qspi_error <= ERROR_BANKSEL;
-                        else if (qspi_addr >= FIRST_SMEM_ADDR)
+                        else if (qspi_addr >= SMEM_BASE_ADDR)
                             qspi_error <= ERROR_ADDRESS;
                         else if (qspi_addr & 3)
                             qspi_error <= ERROR_UNALIGNED;
@@ -435,7 +440,7 @@ always @(posedge clk) begin
                     QSPI_CMD_WR_SMEM:
                         if (bank_count == 0)
                             qspi_error <= ERROR_BANKSEL;
-                        else if (qspi_addr < FIRST_SMEM_ADDR)
+                        else if (qspi_addr < SMEM_BASE_ADDR)
                             qspi_error <= ERROR_ADDRESS;
                         else if (qspi_addr & 7)
                             qspi_error <= ERROR_UNALIGNED;
@@ -448,7 +453,7 @@ always @(posedge clk) begin
                     QSPI_CMD_RD_SMEM:
                         if (bank_count != 1)
                             qspi_error <= ERROR_BANKSEL;
-                        else if (qspi_addr < FIRST_SMEM_ADDR)
+                        else if (qspi_addr < SMEM_BASE_ADDR)
                             qspi_error <= ERROR_ADDRESS;
                         else if (qspi_addr & 7)
                             qspi_error <= ERROR_UNALIGNED;
@@ -607,5 +612,4 @@ end
 `endif
 //=============================================================================
 
-assign dbg_read_result = read_result;
 endmodule

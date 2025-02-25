@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x239804A58EA90D32",
+      "boundary_crc": "0x6CC3F61574271D47",
       "design_src": "SBD",
       "device": "xc7a100tcsg324-1",
       "name": "bd_5b1c",
@@ -20,12 +20,12 @@
         "direction": "I",
         "parameters": {
           "CLK_DOMAIN": {
-            "value": "/source_100mhz/system_clock_clk_out1",
+            "value": "/source_100mhz/clock_50mhz_clk_out1",
             "value_src": "default_prop"
           },
           "FREQ_HZ": {
-            "value": "100000000",
-            "value_src": "default"
+            "value": "50000000",
+            "value_src": "default_prop"
           },
           "FREQ_TOLERANCE_HZ": {
             "value": "0",
@@ -53,12 +53,12 @@
       },
       "probe2": {
         "direction": "I",
-        "left": "9",
+        "left": "7",
         "right": "0"
       },
       "probe3": {
         "direction": "I",
-        "left": "7",
+        "left": "9",
         "right": "0"
       },
       "probe4": {
@@ -73,12 +73,12 @@
       },
       "probe6": {
         "direction": "I",
-        "left": "255",
+        "left": "511",
         "right": "0"
       },
       "probe7": {
         "direction": "I",
-        "left": "255",
+        "left": "511",
         "right": "0"
       }
     },
@@ -108,7 +108,7 @@
             "value": "0"
           },
           "C_ILA_CLK_FREQ": {
-            "value": "100000000"
+            "value": "50000000"
           },
           "C_INPUT_PIPE_STAGES": {
             "value": "0"
@@ -144,7 +144,7 @@
             "value": "0"
           },
           "C_PROBE2_WIDTH": {
-            "value": "10"
+            "value": "8"
           },
           "C_PROBE3_MU_CNT": {
             "value": "1"
@@ -153,7 +153,7 @@
             "value": "0"
           },
           "C_PROBE3_WIDTH": {
-            "value": "8"
+            "value": "10"
           },
           "C_PROBE4_MU_CNT": {
             "value": "1"
@@ -180,7 +180,7 @@
             "value": "0"
           },
           "C_PROBE6_WIDTH": {
-            "value": "256"
+            "value": "512"
           },
           "C_PROBE7_MU_CNT": {
             "value": "1"
@@ -189,7 +189,7 @@
             "value": "0"
           },
           "C_PROBE7_WIDTH": {
-            "value": "256"
+            "value": "512"
           },
           "C_TIME_TAG_WIDTH": {
             "value": "32"
