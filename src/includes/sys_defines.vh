@@ -18,6 +18,7 @@
 `define GXSIM_NEXYS_A7
 //`define GXSIM_XUPPL4
 //`define GXSIM_OFF_BOARD
+//`define GXSIM_REAL
 //================================================
 
 `ifdef GXSIM_NEXYS_A7

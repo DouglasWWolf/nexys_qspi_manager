@@ -21,24 +21,24 @@ module gxsim_qspi_handler #
     output                   dbg_notify_write,
     output                   dbg_notify_read,  
     output     [        9:0] dbg_sck_counts,  
-    output     [        7:0] dbg_opcode,      
+    output                   dbg_rw,      
     output     [       31:0] dbg_address,     
     output     [        1:0] dbg_cs_id,       
-    output     [SMEM_BW-1:0] dbg_wdata,       
+    output     [       31:0] dbg_wdata,       
     output     [SMEM_BW-1:0] dbg_rdata,       
     `endif
 
     input   clk, resetn,
 
     input      [        9:0] sck_counts,   // Count of the rising edges of SCK
-    input      [        7:0] opcode,       // Opcode that arrived on MOSI
+    input                    rw,           // 1 == This is a write, 0 = This is a read
     input      [       31:0] address,      // Address that arrived on MOSI
     input      [        1:0] cs_id,        // Which chip-selects are active?   
-    input      [SMEM_BW-1:0] wdata,        // Data to be written to a register or SMEM
+    input      [       31:0] wdata,        // Data to be written to a register or SMEM
     output reg [SMEM_BW-1:0] rdata,        // Data read from registers or SMEM
 
 
-    // Rising edge = cs_id, address, and opcode have arrived
+    // Rising edge = cs_id, address, and rw signal have arrived
     input async_notify_read,   
                                
     // Rising edge = chip-select has de-asserted
@@ -46,18 +46,13 @@ module gxsim_qspi_handler #
 
 );
 
- 
-// The number of 32-bit words that will fit into wdata or rdata
-localparam SMEM_DW = SMEM_BW / 32;
+// Bring in system-wide localparam definitions
+`include "../includes/sys_params.vh"
 
-//=============================================================================
-// These are the opcodes that the GenX QSPI receiver understands
-//=============================================================================
-localparam[7:0] GENX_QSPI_OPCODE_READ_SINGLE  = 8'hE8;
-localparam[7:0] GENX_QSPI_OPCODE_WRITE_SINGLE = 8'hE9;
-localparam[7:0] GENX_QSPI_OPCODE_READ_BURST   = 8'hEA;
-localparam[7:0] GENX_QSPI_OPCODE_WRITE_BURST  = 8'hEB;
-//=============================================================================
+genvar i;
+
+// The number of 32-bit words that will fit into rdata
+localparam SMEM_DW = SMEM_BW / 32;
 
 // Definitions of the valid chip-select statess
 localparam CS_HOST = 2'b10;
@@ -68,6 +63,9 @@ wire notify_read, notify_write;
 
 // This is data that's being read from the "host" register
 wire[31:0] host_rdata;
+
+// This is a bitmap of which banks are valid for read/writes
+wire[GENX_BANK_COUNT-1:0] bank_select;
 
 //=============================================================================
 // Keep track of the prior state of the "notify signals" and use those states
@@ -114,24 +112,25 @@ xpm_cdc_single # (.SRC_INPUT_REG(0)) cdc_notify_write
 // This block fills in port "rdata" with the requested data. 
 //  
 // Important inputs:
-//      cs_id - is CS_HOST or CS_BANK active?)
-//      opcode - single read, single write, burst read, or burst-write
-//
+//      cs_id : is CS_HOST or CS_BANK active?)
+//      rw    : 1 = This is a write, 0 = This is a read
 //=============================================================================
 always @(posedge clk) begin
 
     rdata <= 0;
 
-    if (cs_id == CS_HOST && opcode == GENX_QSPI_OPCODE_READ_SINGLE)
+    if (cs_id == CS_HOST && rw == 0)
         rdata <= {(host_rdata[31:0]), {SMEM_DW-1{32'b0}}};
 
 end
 //=============================================================================
 
 
-
 // This will strobe high when it's time to write to a "host" register
 wire write_host = notify_write_rising & (cs_id  == CS_HOST);
+
+
+
 
 //=============================================================================
 // This is a simulator for the GenX "host" registers
@@ -141,13 +140,34 @@ gxsim_host_reg host_registers
     .clk            (clk),
     .resetn         (resetn),
     .address        (address),
-    .wdata          (wdata[SMEM_BW-1 -: 32]),
+    .wdata          (wdata),
     .write_strobe   (write_host), 
     .rdata          (host_rdata),
-    .bank_select    ()
+    .bank_select    (bank_select)
 );
 //=============================================================================
+
    
+
+//=============================================================================
+// Banks containing bank registers, SMEM, and SBUF (SMEM buffer)
+//=============================================================================
+for (i=0; i<GENX_BANK_COUNT; i=i+1) begin
+
+    gxsim_bank_reg_smem bank[i]
+    (
+        .clk            (clk),
+        .resetn         (resetn),
+        .address        (address),
+        .wdata          (wdata),
+        .rdata          (),
+        .write_strobe   (),
+        .bank_select    (bank_select[i])        
+    );
+
+end
+//=============================================================================
+
 
 //=============================================================================
 // These ports make it very convenient to attach an ILA for debugging
@@ -156,7 +176,7 @@ gxsim_host_reg host_registers
 assign dbg_notify_write = notify_write_rising;
 assign dbg_notify_read  = notify_read_rising ;     
 assign dbg_sck_counts   = sck_counts         ;             
-assign dbg_opcode       = opcode             ;            
+assign dbg_rw           = rw                 ;
 assign dbg_address      = address            ;              
 assign dbg_cs_id        = cs_id              ;             
 assign dbg_wdata        = wdata              ;                

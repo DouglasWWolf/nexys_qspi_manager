@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x6CC3F61574271D47",
+      "boundary_crc": "0xBF27A4AAEC8B817D",
       "design_src": "SBD",
       "device": "xc7a100tcsg324-1",
       "name": "bd_5b1c",
@@ -53,7 +53,7 @@
       },
       "probe2": {
         "direction": "I",
-        "left": "7",
+        "left": "0",
         "right": "0"
       },
       "probe3": {
@@ -73,7 +73,7 @@
       },
       "probe6": {
         "direction": "I",
-        "left": "511",
+        "left": "31",
         "right": "0"
       },
       "probe7": {
@@ -144,7 +144,7 @@
             "value": "0"
           },
           "C_PROBE2_WIDTH": {
-            "value": "8"
+            "value": "1"
           },
           "C_PROBE3_MU_CNT": {
             "value": "1"
@@ -180,7 +180,7 @@
             "value": "0"
           },
           "C_PROBE6_WIDTH": {
-            "value": "512"
+            "value": "32"
           },
           "C_PROBE7_MU_CNT": {
             "value": "1"
